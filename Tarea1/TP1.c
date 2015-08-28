@@ -18,12 +18,16 @@ int mcd(int a, int b)
 }
 int main(int argc,char **argv)
 {
-    int myid, numprocs, i, *sendbuf, *recvbuf, root = 0;
+    int myid, numprocs, i, *sendbuf, *recvbuf, n, root = 0;
 	int cantidadPrimos;
-	int inicio = 134217728;   // 2^27
+	int inicio = 0;   // 2^27
+    int final = 100;   // 2^32
+	int total = 100; // total de números diferentes para repartir
+	
+	/*int inicio = 134217728;   // 2^27
     int final = 4294967296;   // 2^32
 	int total = 4160749569; // total de números diferentes para repartir
-   
+    */
     double startwtime, endwtime;
     int  namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -50,10 +54,11 @@ int main(int argc,char **argv)
 		// todos deben conocer el numero digitado por el usuario
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-		int actual = inicio + mypid*porcion; // El valor actual que vamos a probar -en este caso el primero-
+		int actual = inicio + myid*porcion; // El valor actual que vamos a probar -en este caso el primero-
+
 		int limiteSuperior;
-		if (actual + procion <  final) {
-			limiteSuperior = actual + procion;
+		if (actual + porcion <  final) {
+			limiteSuperior = actual + porcion;
 		} else {
 			limiteSuperior = final;
 		}
@@ -70,10 +75,12 @@ int main(int argc,char **argv)
 			actual += actual +1;
 		}
 		
+		
 		//cada proceso envia la cantidad de primos que encontro para saber el tamaño del array que guarda los primos en el root
-		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);	
+		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
 		if (myid == root) {
 			recvbuf=(int*) malloc(cantidadPrimos*sizeof(int));	
+			printf("Debugging proceso %d limiteSuperior %d \n", myid, cantidadPrimos);
 		}	
 		// cada proceso debe devolver los números que encontro
 		MPI_Gather( sendbuf, contador, MPI_INT, recvbuf, total, MPI_INT, 0, MPI_COMM_WORLD); 
@@ -86,9 +93,10 @@ int main(int argc,char **argv)
 			printf("wall clock time = %f\n", endwtime-startwtime);	       
 			fflush( stdout );
 			FILE *archivo;
-			archivo = fopen("respuesta.txt", w);
-			for (int k = 0; k  < cantidadPrimos ; k++ ){
-				fprintf(archivo, "%d \n", name);
+			archivo = fopen("respuesta.txt", "w");
+			int k;
+			for (k = 0; k  < cantidadPrimos ; k++ ){
+				fprintf(archivo, "%d \n", recvbuf[k]);
 			}		
 			fclose(archivo);
 			free(recvbuf);
