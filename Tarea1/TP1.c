@@ -22,26 +22,26 @@ int main(int argc,char **argv)
 	int cantidadPrimos;
 	int inicio = 0;   // 2^27
     int final = 100;   // 2^32
-	int total = 100; // total de números diferentes para repartir
+	int total = 100; // total de numeros diferentes para repartir
 	
 	/*int inicio = 134217728;   // 2^27
     int final = 4294967296;   // 2^32
-	int total = 4160749569; // total de números diferentes para repartir
+	int total = 4160749569; // total de numeros diferentes para repartir
     */
     double startwtime, endwtime;
     int  namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
     MPI_Init(&argc,&argv);  /*  Se inicia el trabajo con MPI */
-	MPI_Comm_size(MPI_COMM_WORLD,&numprocs);  /*  MPI almacena en numprocs el número total de procesos que se pusieron a correr */
-	MPI_Comm_rank(MPI_COMM_WORLD,&myid); /*  MPI almacena en myid la identificación del proceso actual */
-	MPI_Get_processor_name(processor_name,&namelen); /*  MPI almacena en processor_name en la computadora que corre el proceso actual, y en namelen la longitud de éste */
+	MPI_Comm_size(MPI_COMM_WORLD,&numprocs);  /*  MPI almacena en numprocs el numero total de procesos que se pusieron a correr */
+	MPI_Comm_rank(MPI_COMM_WORLD,&myid); /*  MPI almacena en myid la identificacion del proceso actual */
+	MPI_Get_processor_name(processor_name,&namelen); /*  MPI almacena en processor_name en la computadora que corre el proceso actual, y en namelen la longitud de este */
 
     fprintf(stdout,"Proceso %d de %d en %s\n", myid, numprocs, processor_name);
-/*  Cada proceso despliega su identificación y el nombre de la computadora en la que corre*/
+/*  Cada proceso despliega su identificacion y el nombre de la computadora en la que corre*/
 	
 	
-	int porcion = total/numprocs;  // tener cuidado de que si sobro uno o más bien falto uno	
+	int porcion = total/numprocs;  // tener cuidado de que si sobro uno o mas bien falto uno	
 	MPI_Barrier(MPI_COMM_WORLD); /* Barrera de sincronizacion.*/
         if (myid == root) {			
 			 while (!n) {
@@ -50,7 +50,9 @@ int main(int argc,char **argv)
 				 scanf("%d",&n);
 			}
 			startwtime = MPI_Wtime();
-        }		
+        	printf("Usted digito: %d\n", n);	
+	}
+		
 		// todos deben conocer el numero digitado por el usuario
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -62,33 +64,39 @@ int main(int argc,char **argv)
 		} else {
 			limiteSuperior = final;
 		}
+		//printf("Proceso: %d Limite Superior: %d\n", myid, limiteSuperior);
 		
 		//Creacion de un array de ints por cada proceso
 		sendbuf=(int*) malloc(porcion*sizeof(int));	
 		int contador = 0;
 		while (actual < limiteSuperior) { 
+			printf("Proceso: %d actual: %d limite: %d\n", myid, actual, limiteSuperior);
+
 			int result = mcd(actual,n);
 			if (result == 1) { // es el mcd es 1 si son primos relativos
 				sendbuf[contador] = actual;
 				contador = contador + 1;
+				printf("x   Proceso: %d Primo encontrado: %d\n", myid, actual);
 			  }
-			actual += actual +1;
+			actual += 1;
 		}
 		
 		
-		//cada proceso envia la cantidad de primos que encontro para saber el tamaño del array que guarda los primos en el root
+		//cada proceso envia la cantidad de primos que encontro para saber el tamano del array que guarda los primos en el root
 		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
+
+
 		if (myid == root) {
 			recvbuf=(int*) malloc(cantidadPrimos*sizeof(int));	
-			printf("Debugging proceso %d limiteSuperior %d \n", myid, cantidadPrimos);
+			printf("Debugging proceso %d cantidad de primos %d \n", myid, cantidadPrimos);
 		}	
-		// cada proceso debe devolver los números que encontro
+		// cada proceso debe devolver los numeros que encontro
 		MPI_Gather( sendbuf, contador, MPI_INT, recvbuf, total, MPI_INT, 0, MPI_COMM_WORLD); 
 		free(sendbuf);  //Limpiamos el buffer
 		
         if (myid == 0) {
             printf("el proceso 0 da la respuesta");
-			endwtime = MPI_Wtime(); /* Se toma el tiempo actual, para luego calcular la duración del cálculo por 
+			endwtime = MPI_Wtime(); /* Se toma el tiempo actual, para luego calcular la duracion del calculo por 
 		                        diferencia con el tiempo inicial*/
 			printf("wall clock time = %f\n", endwtime-startwtime);	       
 			fflush( stdout );
