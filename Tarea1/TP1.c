@@ -31,7 +31,7 @@ int main(int argc,char **argv)
 	int inicio = 0;   // 2^27
     int final = 100;   // 2^32
 	int total = 100; // total de numeros diferentes para repartir
-	int s = 0; // division exacta de numeros para cada proceso
+	int justo = 0; // division exacta de numeros para cada proceso
 	/*int inicio = 134217728;   // 2^27
     int final = 4294967296;   // 2^32
 	int total = 4160749569; // total de numeros diferentes para repartir
@@ -67,12 +67,15 @@ int main(int argc,char **argv)
 			sendbuf = (int *)malloc((porcion)*sizeof(int));  /* asignación dinámica del arreglo inicial para ordenar*/
 		}
 			
-		else { /* Si sobran r > 0 elementos, se debe  repartir en partes iguales a los procesos*/
+		else { /* Si sobran r > 0 elementos, se debe agregar al arreglo inicial p-r elementos  para repartir en 
+				partes iguales a los procesos */
+			porcion = numprocs + porcion - resto;
 			sendbuf = (int *)malloc((porcion)*sizeof(int)); /* asignación dinámica del arreglo inicial para ordenar*/
 			for(i= total ;i<total+numprocs-resto;i++)                   /*Se ponen 0's en los últimos porcion - resto elementos del arreglo */
 				sendbuf[i]=0;
 		}
-		s = porcion/numprocs;
+	
+		justo = porcion/numprocs;  /* el total exacto en el caso de que hubiese resto */ 
 		
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);	/* todos deben conocer el numero digitado por el usuario */
 		
