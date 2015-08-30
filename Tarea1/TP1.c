@@ -2,28 +2,36 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <math.h>
+#include<string.h>
 
-// funcion que devuelve el maximo comun divisor de 2 numeros
-// Recordar que el que escribe el usuarion pueda ser un long long int
+/*
+	mcd  (Maximo Comun Divisor)
+	Descripcion: Funcion que devuelve el maximo comun divisor de 2 numeros.
+	Recordar que el que escribe el usuarion pueda ser un long long int
+
+*/
 int mcd(int a, int b)
 {
 	int part, aux;
-	part = a%b;
-	while (part != 0) {
+	part = a%b;			
+	while (part != 0) {   
 		aux = b;
 		b = part;
 		part = aux%b;
 	}
 	return b; 
 }
+
+
 int main(int argc,char **argv)
 {
-    int myid, numprocs, i, *sendbuf, *recvbuf, n, root = 0;
-	int cantidadPrimos;
+    int myid, numprocs, i = 0, *sendbuf, *recvbuf, n = 0, root = 0;
+	int porcion = 0, resto = 0;   
+	int cantidadPrimos = 0;
 	int inicio = 0;   // 2^27
     int final = 100;   // 2^32
 	int total = 100; // total de numeros diferentes para repartir
-	
+	int s = 0; // division exacta de numeros para cada proceso
 	/*int inicio = 134217728;   // 2^27
     int final = 4294967296;   // 2^32
 	int total = 4160749569; // total de numeros diferentes para repartir
@@ -38,76 +46,75 @@ int main(int argc,char **argv)
 	MPI_Get_processor_name(processor_name,&namelen); /*  MPI almacena en processor_name en la computadora que corre el proceso actual, y en namelen la longitud de este */
 
     fprintf(stdout,"Proceso %d de %d en %s\n", myid, numprocs, processor_name);
-/*  Cada proceso despliega su identificacion y el nombre de la computadora en la que corre*/
-	
-	
-	int porcion = total/numprocs;  // tener cuidado de que si sobro uno o mas bien falto uno	
+	/*  Cada proceso despliega su identificacion y el nombre de la computadora en la que corre*/
+	 
 	MPI_Barrier(MPI_COMM_WORLD); /* Barrera de sincronizacion.*/
-        if (myid == root) {			
-			 while (!n) {
-				 printf("Digite un numero entre 2 y 18446744073709551615 ");
-				 fflush(stdout);
-				 scanf("%d",&n);
-			}
-			startwtime = MPI_Wtime();
-        	printf("Usted digito: %d\n", n);	
-	}
+	if (myid == root) {			
+		 while (!n) {
+			 printf("Digite un numero entre 2 y 18446744073709551615: ");
+			 fflush(stdout);
+			 scanf("%d",&n);  /* n es el numero al cual se le buscaran los primos relativos */
+		}
+		printf("Usted digito: %d\n", n);
+		startwtime = MPI_Wtime();  /* inicia el tiempo que dure el programa */
 		
-		// todos deben conocer el numero digitado por el usuario
-        MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-		int actual = inicio + myid*porcion; // El valor actual que vamos a probar -en este caso el primero-
+	}
+	
+	porcion = total/numprocs; 
+	resto = total%numprocs; 
+		
+		if(resto == 0) {           /* si no sobran elementos  el arreglo se mantiene de tamano porcion */
+			sendbuf = (int *)malloc((porcion)*sizeof(int));  /* asignación dinámica del arreglo inicial para ordenar*/
+		}
+			
+		else { /* Si sobran r > 0 elementos, se debe  repartir en partes iguales a los procesos*/
+			sendbuf = (int *)malloc((porcion)*sizeof(int)); /* asignación dinámica del arreglo inicial para ordenar*/
+			for(i= total ;i<total+numprocs-resto;i++)                   /*Se ponen 0's en los últimos porcion - resto elementos del arreglo */
+				sendbuf[i]=0;
+		}
+		s = porcion/numprocs;
+		
+        MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);	/* todos deben conocer el numero digitado por el usuario */
+		
+		int actual = inicio + myid*porcion; /* El valor actual que vamos a probar segun el proceso */
 
 		int limiteSuperior;
 		if (actual + porcion <  final) {
-			limiteSuperior = actual + porcion;
+			limiteSuperior = actual + porcion;			/* calculo del limite superior para cada proceso */ 
 		} else {
 			limiteSuperior = final;
 		}
-		//printf("Proceso: %d Limite Superior: %d\n", myid, limiteSuperior);
 		
-		//Creacion de un array de ints por cada proceso
-		sendbuf=(int*) malloc(porcion*sizeof(int));	
-		int contador = 0;
+		int contador = 0;   // contador de primos encontrados 
+		
+		/* se crea un archivo de nombre respuesta+ el identificador del proceso actual */
+		char copyname[50];
+		sprintf(copyname, "Respuesta%i.txt", myid);
+		FILE *archivo;
+		archivo = fopen(copyname,"w");
+		
 		while (actual < limiteSuperior) { 
-			printf("Proceso: %d actual: %d limite: %d\n", myid, actual, limiteSuperior);
-
 			int result = mcd(actual,n);
-			if (result == 1) { // es el mcd es 1 si son primos relativos
+			if (result == 1) { // si el mcd es 1 son primos relativos
 				sendbuf[contador] = actual;
-				contador = contador + 1;
-				printf("x   Proceso: %d Primo encontrado: %d\n", myid, actual);
+				//printf("x   Proceso: %d Primo encontrado: %d\n", myid, sendbuf[contador]);  /* para corroborar en consola */ 
+				fprintf(archivo, "Primo encontrado: %d\n", sendbuf[contador]);
+				contador += 1;
 			  }
 			actual += 1;
 		}
+		fclose(archivo);
 		
-		
-		//cada proceso envia la cantidad de primos que encontro para saber el tamano del array que guarda los primos en el root
+		//Cada proceso envia la cantidad de primos que encontro para saber el tamano del array que guarda los primos en el root
 		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
-
-
-		if (myid == root) {
-			recvbuf=(int*) malloc(cantidadPrimos*sizeof(int));	
-			printf("Debugging proceso %d cantidad de primos %d \n", myid, cantidadPrimos);
-		}	
-		// cada proceso debe devolver los numeros que encontro
-		MPI_Gather( sendbuf, contador, MPI_INT, recvbuf, total, MPI_INT, 0, MPI_COMM_WORLD); 
-		free(sendbuf);  //Limpiamos el buffer
 		
-        if (myid == 0) {
-            printf("el proceso 0 da la respuesta");
-			endwtime = MPI_Wtime(); /* Se toma el tiempo actual, para luego calcular la duracion del calculo por 
-		                        diferencia con el tiempo inicial*/
-			printf("wall clock time = %f\n", endwtime-startwtime);	       
+        if (myid == root) {
+			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %d \n", myid, cantidadPrimos);
+			printf("Ver los archivos creados en esta carpeta para saber los primos encontrados. \n");
+			endwtime = MPI_Wtime(); 
+			printf("Tiempo de reloj: %f\n", endwtime-startwtime);	       
 			fflush( stdout );
-			FILE *archivo;
-			archivo = fopen("respuesta.txt", "w");
-			int k;
-			for (k = 0; k  < cantidadPrimos ; k++ ){
-				fprintf(archivo, "%d \n", recvbuf[k]);
-			}		
-			fclose(archivo);
-			free(recvbuf);
+			free(sendbuf);  //Limpiamos el buffer
 	    }
            
     MPI_Finalize();
