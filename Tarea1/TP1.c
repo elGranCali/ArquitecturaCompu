@@ -107,7 +107,7 @@ int main(int argc,char **argv)
 		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
 		
         if (myid == root) {
-			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %d \n", myid, cantidadPrimos);
+			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %u \n", myid, cantidadPrimos); // %u porque 
 			printf("Ver los archivos creados en esta carpeta para saber los primos encontrados. \n");
 			endwtime = MPI_Wtime(); 
 			printf("Tiempo de reloj: %f\n", endwtime-startwtime);	       
