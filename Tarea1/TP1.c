@@ -7,10 +7,9 @@
 /*
 	mcd  (Maximo Comun Divisor)
 	Descripcion: Funcion que devuelve el maximo comun divisor de 2 numeros.
-	Recordar que el que escribe el usuarion pueda ser un long long int
-
+	El intervalo sera de 134217728 a 4294967295 para poder hacer uso de unsigned ints
 */
-int mcd(int a, int b)
+int mcd(unsigned int a, unsigned int b)
 {
 	int part, aux;
 	part = a%b;			
@@ -28,14 +27,14 @@ int main(int argc,char **argv)
     int myid, numprocs, i = 0, *sendbuf, *recvbuf, n = 0, root = 0;
 	int porcion = 0, resto = 0;   
 	int cantidadPrimos = 0;
-	int inicio = 0;   // 2^27
-    int final = 100;   // 2^32
-	int total = 100; // total de numeros diferentes para repartir
+	// int inicio = 0;   // 2^27
+    // int final = 100;   // 2^32
+	// int total = 100; // total de numeros diferentes para repartir
 	int justo = 0; // division exacta de numeros para cada proceso
-	/*int inicio = 134217728;   // 2^27
-    int final = 4294967296;   // 2^32
-	int total = 4160749569; // total de numeros diferentes para repartir
-    */
+	unsigned int inicio = 134217728;   // 2^27
+    unsigned int final = 4294967295;   // 2^32  le quite uno para usar unsigned int que es mas efectivo
+	unsigned int total = 4160749569; // total de numeros diferentes para repartir
+    
     double startwtime, endwtime;
     int  namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -64,24 +63,21 @@ int main(int argc,char **argv)
 	resto = total%numprocs; 
 		
 		if(resto == 0) {           /* si no sobran elementos  el arreglo se mantiene de tamano porcion */
-			sendbuf = (int *)malloc((porcion)*sizeof(int));  /* asignación dinámica del arreglo inicial para ordenar*/
-		}
-			
+			//sendbuf = (int *)malloc((porcion)*sizeof(int));  /* asignación dinámica del arreglo inicial para ordenar*/
+			//Esta parte no es necesaria porque cada proceso escribe en su archivo
+		}		
 		else { /* Si sobran r > 0 elementos, se debe agregar al arreglo inicial p-r elementos  para repartir en 
 				partes iguales a los procesos */
 			porcion = numprocs + porcion - resto;
-			sendbuf = (int *)malloc((porcion)*sizeof(int)); /* asignación dinámica del arreglo inicial para ordenar*/
-			for(i= total ;i<total+numprocs-resto;i++)                   /*Se ponen 0's en los últimos porcion - resto elementos del arreglo */
-				sendbuf[i]=0;
 		}
 	
 		justo = porcion/numprocs;  /* el total exacto en el caso de que hubiese resto */ 
 		
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);	/* todos deben conocer el numero digitado por el usuario */
 		
-		int actual = inicio + myid*porcion; /* El valor actual que vamos a probar segun el proceso */
+		unsigned int actual = inicio + myid*porcion; /* El valor actual que vamos a probar segun el proceso */
 
-		int limiteSuperior;
+		unsigned int limiteSuperior;
 		if (actual + porcion <  final) {
 			limiteSuperior = actual + porcion;			/* calculo del limite superior para cada proceso */ 
 		} else {
@@ -99,9 +95,8 @@ int main(int argc,char **argv)
 		while (actual < limiteSuperior) { 
 			int result = mcd(actual,n);
 			if (result == 1) { // si el mcd es 1 son primos relativos
-				sendbuf[contador] = actual;
 				//printf("x   Proceso: %d Primo encontrado: %d\n", myid, sendbuf[contador]);  /* para corroborar en consola */ 
-				fprintf(archivo, "Primo encontrado: %d\n", sendbuf[contador]);
+				fprintf(archivo, "Primo encontrado: %d\n", actual);
 				contador += 1;
 			  }
 			actual += 1;
@@ -117,7 +112,7 @@ int main(int argc,char **argv)
 			endwtime = MPI_Wtime(); 
 			printf("Tiempo de reloj: %f\n", endwtime-startwtime);	       
 			fflush( stdout );
-			free(sendbuf);  //Limpiamos el buffer
+			//free(sendbuf);  //Limpiamos el buffer
 	    }
            
     MPI_Finalize();
