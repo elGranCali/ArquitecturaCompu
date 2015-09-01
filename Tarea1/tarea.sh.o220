@@ -1,0 +1,24 @@
+Proceso 4 de 20 en compute-0-0.local
+Proceso 15 de 20 en compute-0-1.local
+Proceso 2 de 20 en compute-0-0.local
+Proceso 8 de 20 en compute-0-3.local
+Proceso 17 de 20 en compute-0-1.local
+Proceso 3 de 20 en compute-0-0.local
+Proceso 13 de 20 en compute-0-2.local
+Proceso 5 de 20 en compute-0-3.local
+Proceso 18 de 20 en compute-0-1.local
+Proceso 1 de 20 en compute-0-0.local
+Proceso 14 de 20 en compute-0-2.local
+Proceso 6 de 20 en compute-0-3.local
+Proceso 19 de 20 en compute-0-1.local
+Proceso 10 de 20 en compute-0-2.local
+Proceso 7 de 20 en compute-0-3.local
+Proceso 11 de 20 en compute-0-2.local
+Proceso 9 de 20 en compute-0-3.local
+Proceso 16 de 20 en compute-0-1.local
+Proceso 0 de 20 en compute-0-0.local
+Proceso 12 de 20 en compute-0-2.local
+Digite un numero entre 2 y 18446744073709551615: Usted digito: 3
+Proceso 0 da la respuesta. Cantidad de primos encontrados: 2635141527 
+Ver los archivos creados en esta carpeta para saber los primos encontrados. 
+Tiempo de reloj: 529.549743
