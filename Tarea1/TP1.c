@@ -9,7 +9,7 @@
 	Descripcion: Funcion que devuelve el maximo comun divisor de 2 numeros.
 	El intervalo sera de 134217728 a 4294967295 para poder hacer uso de unsigned ints
 */
-int mcd(unsigned int a, unsigned int b)
+int mcd(unsigned int a, unsigned long long int b)
 {
 	unsigned int part, aux;
 	part = a%b;			
@@ -24,12 +24,10 @@ int mcd(unsigned int a, unsigned int b)
 
 int main(int argc,char **argv)
 {
-    int myid, numprocs, i = 0, *sendbuf, *recvbuf, n = 0, root = 0;
-	int porcion = 0, resto = 0;   
-	int cantidadPrimos = 0;
-	// int inicio = 0;   // 2^27
-    // int final = 100;   // 2^32
-	// int total = 100; // total de numeros diferentes para repartir
+    int myid, numprocs, i = 0, *sendbuf, *recvbuf, root = 0;
+	unsigned long long int n =0;
+	unsigned int porcion = 0, resto = 0;   
+	unsigned int cantidadPrimos = 0;
 	int justo = 0; // division exacta de numeros para cada proceso
 	unsigned int inicio = 134217728;   // 2^27
     unsigned int final = 4294967295;   // 2^32  le quite uno para usar unsigned int que es mas efectivo
@@ -52,7 +50,7 @@ int main(int argc,char **argv)
 		 while (!n) {
 			 printf("Digite un numero entre 2 y 18446744073709551615: ");
 			 fflush(stdout);
-			 scanf("%d",&n);  /* n es el numero al cual se le buscaran los primos relativos */
+			 scanf("%Lu",&n);  /* n es el numero al cual se le buscaran los primos relativos */
 		}
 		printf("Usted digito: %d\n", n);
 		startwtime = MPI_Wtime();  /* inicia el tiempo que dure el programa */
@@ -96,7 +94,7 @@ int main(int argc,char **argv)
 			int result = mcd(actual,n);
 			if (result == 1) { // si el mcd es 1 son primos relativos
 				//printf("x   Proceso: %d Primo encontrado: %d\n", myid, sendbuf[contador]);  /* para corroborar en consola */ 
-				fprintf(archivo, "Primo encontrado: %d\n", actual);
+				fprintf(archivo, "%d\n", actual);
 				contador += 1;
 			  }
 			actual += 1;
@@ -107,7 +105,7 @@ int main(int argc,char **argv)
 		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD);	
 		
         if (myid == root) {
-			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %u \n", myid, cantidadPrimos); // %u porque 
+			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %u \n", myid, cantidadPrimos);
 			printf("Ver los archivos creados en esta carpeta para saber los primos encontrados. \n");
 			endwtime = MPI_Wtime(); 
 			printf("Tiempo de reloj: %f\n", endwtime-startwtime);	       
