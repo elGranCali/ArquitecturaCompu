@@ -11,7 +11,7 @@
 */
 int mcd(unsigned int a, unsigned int b)
 {
-	int part, aux;
+	unsigned int part, aux;
 	part = a%b;			
 	while (part != 0) {   
 		aux = b;
@@ -104,7 +104,7 @@ int main(int argc,char **argv)
 		fclose(archivo);
 		
 		//Cada proceso envia la cantidad de primos que encontro para saber el tamano del array que guarda los primos en el root
-		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);	
+		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD);	
 		
         if (myid == root) {
 			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %u \n", myid, cantidadPrimos); // %u porque 
