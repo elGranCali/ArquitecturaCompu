@@ -9,9 +9,9 @@
 	Descripcion: Funcion que devuelve el maximo comun divisor de 2 numeros.
 	El intervalo sera de 134217728 a 4294967295 para poder hacer uso de unsigned ints
 */
-int mcd(unsigned int a, unsigned long long int b)
+unsigned long long int mcd(unsigned long long int a, unsigned long long int b)
 {
-	unsigned int part, aux;
+	unsigned long long int part, aux;
 	part = a%b;			
 	while (part != 0) {   
 		aux = b;
@@ -26,13 +26,13 @@ int main(int argc,char **argv)
 {
     int myid, numprocs, i = 0, *sendbuf, *recvbuf, root = 0;
 	unsigned long long int n =0;
-	unsigned int porcion = 0, resto = 0;   
-	unsigned int cantidadPrimos = 0;
+	unsigned long long int porcion = 0, resto = 0;   
+	unsigned long long int cantidadPrimos = 0;
 	int justo = 0; // division exacta de numeros para cada proceso
 	unsigned int inicio = 134217728;   // 2^27
     unsigned int final = 4294967295;   // 2^32  le quite uno para usar unsigned int que es mas efectivo
 	unsigned int total = 4160749569; // total de numeros diferentes para repartir
-    
+  
     double startwtime, endwtime;
     int  namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -60,28 +60,24 @@ int main(int argc,char **argv)
 	porcion = total/numprocs; 
 	resto = total%numprocs; 
 		
-		if(resto == 0) {           /* si no sobran elementos  el arreglo se mantiene de tamano porcion */
-			//sendbuf = (int *)malloc((porcion)*sizeof(int));  /* asignación dinámica del arreglo inicial para ordenar*/
-			//Esta parte no es necesaria porque cada proceso escribe en su archivo
+		if(resto != 0) {           
+			porcion = numprocs + porcion - resto; // Si sobran elementos recalcular porcion
 		}		
-		else { /* Si sobran r > 0 elementos, se recalcula la porcion */
-			porcion = numprocs + porcion - resto;
-		}
 	
 		justo = porcion/numprocs;  /* el total exacto en el caso de que hubiese resto */ 
 		
         MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);	/* todos deben conocer el numero digitado por el usuario */
 		
-		unsigned int actual = inicio + myid*porcion; /* El valor actual que vamos a probar segun el proceso */
+		unsigned long long int actual = inicio + myid*porcion; /* El valor actual que vamos a probar segun el proceso */
 
-		unsigned int limiteSuperior;
+		unsigned long long int limiteSuperior;
 		if (actual + porcion <  final) {
 			limiteSuperior = actual + porcion;			/* calculo del limite superior para cada proceso */ 
 		} else {
 			limiteSuperior = final;
 		}
 		
-		int contador = 0;   // contador de primos encontrados 
+		unsigned long long int contador = 0;   // contador de primos encontrados 
 		
 		/* se crea un archivo de nombre respuesta+ el identificador del proceso actual */
 		char copyname[50];
@@ -104,6 +100,7 @@ int main(int argc,char **argv)
 		MPI_Reduce(&contador, &cantidadPrimos, 1, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD);	
 		
         if (myid == root) {
+			printf("Tarea Programada 1 \n Estudiantes: \n Michelle Cersossimo Morales B21684 \nCarlos Sanabria Sandoval A75952");
 			printf("Proceso %d da la respuesta. Cantidad de primos encontrados: %u \n", myid, cantidadPrimos);
 			printf("Ver los archivos creados en esta carpeta para saber los primos encontrados. \n");
 			endwtime = MPI_Wtime(); 
