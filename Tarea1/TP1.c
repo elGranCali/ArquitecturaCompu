@@ -64,8 +64,7 @@ int main(int argc,char **argv)
 			//sendbuf = (int *)malloc((porcion)*sizeof(int));  /* asignación dinámica del arreglo inicial para ordenar*/
 			//Esta parte no es necesaria porque cada proceso escribe en su archivo
 		}		
-		else { /* Si sobran r > 0 elementos, se debe agregar al arreglo inicial p-r elementos  para repartir en 
-				partes iguales a los procesos */
+		else { /* Si sobran r > 0 elementos, se recalcula la porcion */
 			porcion = numprocs + porcion - resto;
 		}
 	
@@ -110,7 +109,6 @@ int main(int argc,char **argv)
 			endwtime = MPI_Wtime(); 
 			printf("Tiempo de reloj: %f\n", endwtime-startwtime);	       
 			fflush( stdout );
-			//free(sendbuf);  //Limpiamos el buffer
 	    }
            
     MPI_Finalize();
