@@ -11,11 +11,16 @@ package arquiproject;
  */
 public class Contexto {
     
-    private int programCounter;
-    private String[] registros = new String[32];
+    private int PC;
+    private int[] registros = new int[33];
     
     public Contexto(){
-        programCounter = 0;
+        PC = 0;
+        for(int i = 0; i<33; i++){
+            registros[i]=0;
+        }
     }
+    
+   // Setters y getter de eso bichos
             
 }

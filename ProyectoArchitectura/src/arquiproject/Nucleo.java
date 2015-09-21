@@ -18,21 +18,33 @@ public class Nucleo extends Thread {
     private final CyclicBarrier lock;
     private String identificacion;
     private boolean hayTrabajo;
-    public boolean trabajoActual;
-    private Object lock2;
+    public boolean ocupado;
+    public Contexto contexto;
+
+    int [] registros; 
     
-    public Nucleo(CyclicBarrier lock, String identificacion, Object lock2){
-        this.lock2 = lock2;
+    
+    public Nucleo(CyclicBarrier lock, String identificacion){
         this.lock = lock;
+
         this.identificacion = identificacion;
         hayTrabajo = true;
-        trabajoActual = true;
+        ocupado = true;
+        registros = new int[33];
+        for(int i = 0; i<33; i++){
+            registros[i]=0;
+        }
     }
     
+    public void setContexto(Contexto contexto) {
+        this.contexto = contexto;
+    }
     
     public void setEstado(boolean hayTrabajo){
         this.hayTrabajo = hayTrabajo;
     }
+    
+    
     
     // Este método puede ser llamado en cualquier momento que se termine un ciclo
     private void avanzarReloj() throws InterruptedException{
@@ -46,8 +58,9 @@ public class Nucleo extends Thread {
     
     @Override
     public void run(){
+        registros = Decodificador.decodificacion("8 1 4 9", registros);
         while (hayTrabajo) { // Seria hasta que ya no exista trabajo
-            System.out.println("Núcleo " + identificacion + " iniciando el ciclo");
+            //System.out.println("Núcleo " + identificacion + " iniciando el ciclo");
         
             // AQUI SE MANEJARIA LA LOGICA DE CADA NUCLEO
             
@@ -56,7 +69,7 @@ public class Nucleo extends Thread {
             } catch (InterruptedException ex) {
                 Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
             }
-            System.out.println("Núcleo " + identificacion + " terminado ciclo");  
+            //System.out.println("Núcleo " + identificacion + " terminado ciclo");  
         }
     }        
 }
