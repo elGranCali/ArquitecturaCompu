@@ -26,14 +26,15 @@ public class HiloMaestro {
      */
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
+    private static final Object lock2 = new Object();
     Nucleo n1;
     Nucleo n2; 
     private Queue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
     
     public HiloMaestro() {
         ciclo = 1;
-        n1 = new Nucleo(lock, "uno");
-        n2 = new Nucleo(lock, "dos"); 
+        n1 = new Nucleo(lock, "uno", lock2);
+        n2 = new Nucleo(lock, "dos", lock2); 
     }
     
     private void iniciarHilos(){
@@ -58,6 +59,17 @@ public class HiloMaestro {
         }
     }
     
+    
+    public void modificarVariableInstancia() {
+            synchronized(lock2){
+            try {
+                lock2.wait();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            n1.trabajoActual = false;
+        }
+    }
     
     public void iniciar(){
         iniciarHilos(); // Siempre ejecutaran primero el wait

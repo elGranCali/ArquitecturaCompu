@@ -138,7 +138,7 @@ public class interfaz extends javax.swing.JFrame {
             File myFile = chooser.getSelectedFile();
             String text = myFile + "";
             
-            ArquiProject auxiliar = new ArquiProject();
+            HiloMaestro auxiliar = new HiloMaestro();
             auxiliar.ReadFile(text);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
