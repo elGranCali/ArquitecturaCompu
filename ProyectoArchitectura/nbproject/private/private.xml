@@ -3,10 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/a75952/Documents/GitHub/ArquitecturaCompu/arquiProjectMich/src/arquiproject/HiloMaestro.java</file>
-            <file>file:/C:/Users/a75952/Documents/GitHub/ArquitecturaCompu/arquiProjectMich/src/arquiproject/interfaz.java</file>
-            <file>file:/C:/Users/a75952/Documents/GitHub/ArquitecturaCompu/arquiProjectMich/src/arquiproject/Nucleo.java</file>
-            <file>file:/C:/Users/a75952/Documents/GitHub/ArquitecturaCompu/arquiProjectMich/src/arquiproject/Contexto.java</file>
+            <file>file:/C:/Users/Pc/Desktop/ArquiCompu/ProyectoArchitectura/src/arquiproject/interfaz.java</file>
+            <file>file:/C:/Users/Pc/Desktop/ArquiCompu/ProyectoArchitectura/src/arquiproject/HiloMaestro.java</file>
+            <file>file:/C:/Users/Pc/Desktop/ArquiCompu/ProyectoArchitectura/src/arquiproject/Decodificador.java</file>
+            <file>file:/C:/Users/Pc/Desktop/ArquiCompu/ProyectoArchitectura/src/arquiproject/Contexto.java</file>
+            <file>file:/C:/Users/Pc/Desktop/ArquiCompu/ProyectoArchitectura/src/arquiproject/Nucleo.java</file>
         </group>
     </open-files>
 </project-private>

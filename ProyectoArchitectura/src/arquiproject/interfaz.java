@@ -20,8 +20,10 @@ public class interfaz extends javax.swing.JFrame {
     /**
      * Creates new form interfaz
      */
+    HiloMaestro auxiliar = new HiloMaestro();
     public interfaz() {
         initComponents();
+        
     }
 
     /**
@@ -137,20 +139,29 @@ public class interfaz extends javax.swing.JFrame {
         if (returnVal == JFileChooser.APPROVE_OPTION){
             File myFile = chooser.getSelectedFile();
             String text = myFile + "";
-            
-            HiloMaestro auxiliar = new HiloMaestro();
             auxiliar.ReadFile(text);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
+        String qCiclos = jTextField1.getText();
+        String mCiclos = jTextField2.getText();
+        String bCiclos = jTextField3.getText();
+        int quantumCiclos = Integer.parseInt(qCiclos);
+        int memoryCiclos = Integer.parseInt(mCiclos);
+        int busCiclos = Integer.parseInt(bCiclos);
+        auxiliar.setParametrosCiclos(quantumCiclos,memoryCiclos,busCiclos);
+        
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField3ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_jTextField3ActionPerformed
 
+    public void imprima(String string) {
+        String newline = "\n";
+        jTextArea1.append(string+newline);        
+    }
     /**
      * @param args the command line arguments
      */

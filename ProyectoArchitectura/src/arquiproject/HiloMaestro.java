@@ -21,11 +21,16 @@ import java.util.logging.Logger;
  */
 public class HiloMaestro {
     static int totalInstrucciones = 0; 
-    static int cantidadMemInstrucciones = 639; 
-    static int [] memoriaInstrucciones = new int[639];
+    static int cantidadMemInstrucciones = 640; 
+    static int [] memoriaInstrucciones = new int[640];
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     private static final Object lock2 = new Object();
+    int quantumCiclos;
+    int memoriaCiclos;
+    int busCiclos; 
+    
+    
     Nucleo n1;
     Nucleo n2; 
     private Queue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
@@ -40,19 +45,23 @@ public class HiloMaestro {
         return !cola.isEmpty();
     }
     
-    
-    private void guardarContextos(){
+    /*private void guardarContextos(){
         // Parte que habria q subir los hilos y darles un contexto
         agregarContexto(new Contexto());
         agregarContexto(new Contexto());
     }
-    
     public void agregarContexto(Contexto nuevoContexto){
         if (cola.add(nuevoContexto)) {
             //System.out.println("Contexto agregado");
         }
     }
+    */
     
+     private void asignarContexto(Nucleo nucleo) {
+        if (!nucleo.ocupado) {
+            nucleo.setContexto(cola.remove());
+        }
+    }
     
     public void modificarVariableInstancia() {
             synchronized(lock2){
@@ -77,7 +86,7 @@ public class HiloMaestro {
         while(hayTrabajo()) {     
             try {
                 new Scanner(System.in).nextLine();
-                //System.out.println("El ciclo actual es " + ciclo);
+                System.out.println("El ciclo actual es " + ciclo);
                 lock.await();
                 ciclo++;
                 asignarContexto(n1);    
@@ -107,10 +116,11 @@ public class HiloMaestro {
                     memoriaInstrucciones[totalInstrucciones] = number;
                     totalInstrucciones++; 
                 }
-                //System.out.println(line);
             }
-            imprimirMemoria();
+            //imprimirMemoria();
+            System.out.println("Archivo "+filename+" procesado.");
             cola.add(new Contexto());
+            System.out.println("Contexto agregado");
         }catch (Exception e) {
             
         }
@@ -131,7 +141,19 @@ public class HiloMaestro {
         System.out.println(cajita);
     }
     
+    public static int leerMemoria(int posicion) {
+        int valor = memoriaInstrucciones[posicion];
+        return valor; 
+    }
     
+    public void setParametrosCiclos(int q, int m, int b) {
+        quantumCiclos = q;
+        memoriaCiclos = m;
+        busCiclos = b; 
+        String r = "q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos; 
+        System.out.println("q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos);
+        //new interfaz().imprima(r); 
+    }
     
      public HiloMaestro() {
         ciclo = 1;
@@ -144,21 +166,18 @@ public class HiloMaestro {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        
         initMemoriaInstrucciones();
         java.awt.EventQueue.invokeLater(new Runnable() {
         public void run() {
                 new interfaz().setVisible(true);
             }
         });
+        
         HiloMaestro maestro = new HiloMaestro();
         maestro.iniciar();
     }
 
-    private void asignarContexto(Nucleo nucleo) {
-        if (!nucleo.ocupado) {
-            nucleo.setContexto(cola.remove());
-        }
-    }
+  
     
 } // Final de clase
