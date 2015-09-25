@@ -11,11 +11,11 @@ package arquiproject;
  */
 public class Contexto {
     
-    private int PC;
-    private int[] registros = new int[33];
+    public int PC;
+    public int[] registros = new int[33];
     
-    public Contexto(){
-        PC = 0;
+    public Contexto(int pc){
+        this.PC = pc;
         for(int i = 0; i<33; i++){
             registros[i]=0;
         }

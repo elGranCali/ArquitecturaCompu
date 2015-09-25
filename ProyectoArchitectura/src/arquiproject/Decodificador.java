@@ -15,6 +15,7 @@ public class Decodificador {
     static int M = 2;
     static int PC = 2;
     
+    
     public static int[] decodificacion(String instruccion , int[] registros){
         int posEspacio = instruccion.indexOf(" ");
         String codOp = instruccion.substring(0, posEspacio);
@@ -102,5 +103,12 @@ public class Decodificador {
         return registros;
     }
     
-    
+    public static boolean esFin(String instruccion){
+        String [] division = instruccion.split(" ");
+        boolean esFin = false;
+        if(division[0].equals("63")) {
+            esFin = true; 
+        } 
+        return esFin;
+    }
 }
