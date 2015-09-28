@@ -123,7 +123,7 @@ public class Nucleo extends Thread {
                 System.out.println("Instruccion esta en cache"); 
                 String hilillo = leerInstruccionDeCache(numBloque, numPalabra);
                 System.out.println("Hilillo actual: "+hilillo); 
-                registros = Decodificador.decodificacion(hilillo, registros);
+                Decodificador.decodificacion(hilillo, registros, contexto);
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera

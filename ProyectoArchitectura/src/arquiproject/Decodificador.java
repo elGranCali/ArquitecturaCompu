@@ -8,15 +8,16 @@ package arquiproject;
 
 /**
  *
- * @author a75952
+ * @author B12037
  */
 public class Decodificador {
     
     static int M = 2;
-    static int PC = 2;
+    static Contexto contexto;
     
     
-    public static int[] decodificacion(String instruccion , int[] registros){
+    public static void decodificacion(String instruccion , int[] registros, Contexto contextoRecibido){
+        contexto = contextoRecibido;
         int posEspacio = instruccion.indexOf(" ");
         String codOp = instruccion.substring(0, posEspacio);
         instruccion = instruccion.substring(posEspacio+1, instruccion.length());
@@ -62,28 +63,30 @@ public class Decodificador {
                 registros[r3]=registros[r1]/registros[r2];
                 System.out.print(registros[r3]);
                 break;
-            case "35":
+            /*case "35":
                 registros[r2]= M*(r3+registros[r1]);
                 System.out.print(registros[r2]);
-                break;
+                break;*/
             /*case "43":
                 break;*/
-            /*case "4":
-                if(registros[r1]==0)                                
-                break;*/
-            /*case "5":
+            case "4":
+                if(registros[r1] == 0)
+                    contexto.PC = contexto.PC+(r3*4);                             
+                break;
+            case "5":
                 if(registros[r1]!= 0)
-                break;*/
+                    contexto.PC = contexto.PC+(r3*4);
+                break;
             case "3":
-                registros[31] = PC;
-                PC += r3;
-                System.out.print("PC="+PC+" R31="+registros[31]);
+                registros[31] = contexto.PC;
+                contexto.PC += r3;
+                System.out.print("PC="+contexto.PC+" R31="+registros[31]);
                 break;
             case "2":
-                PC = registros[r1];
-                System.out.print("PC="+PC);
+                contexto.PC = registros[r1];
+                System.out.print("PC="+contexto.PC);
                 break;
-            case "11":
+            /*case "11":
                 registros[r2] = M*(r3+registros[r1]);
                 registros[32] = r3+registros[r1];
                 break;
@@ -93,14 +96,13 @@ public class Decodificador {
                 }else{
                     registros[r2] = 0;
                 }
-                break;
+                break;*/
             case "63":
                 System.exit(0);
                 break;
             default:
                 break;
         }
-        return registros;
     }
     
     public static boolean esFin(String instruccion){
