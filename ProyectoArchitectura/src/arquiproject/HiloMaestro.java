@@ -40,7 +40,7 @@ public class HiloMaestro {
    
     
     private boolean hayTrabajo(){
-        return !cola.isEmpty();
+        return !(cantidadHilosCargados==0);
     }
    
     
@@ -71,14 +71,8 @@ public class HiloMaestro {
         }
     }
     
-    public void procesar() {
-        
-        n1.procesar();
-        n2.procesar();
-        
-    }
     
-    // cuidado, q pasa si solo hay q iniciar 1 hilo??? 
+    // Se inician los hilos y se ejecutan el asignar contexto
       private void iniciarHilos(){
         System.out.println("Se inician los hilos (?)");
         n1.start();
@@ -90,20 +84,17 @@ public class HiloMaestro {
         // revisar q en la cola hayan hilos para asignar 2!! 
         asignarContexto(n1);
         asignarContexto(n2);
-        iniciarHilos(); // Siempre ejecutaran primero el wait // necesario ???
-        // si hay un iniciarHilos, entonces aqui no debería estar el procesar, sino en el run de Nucleo 
-        n1.procesar();
-        //n2.procesar();    // mismo problema q lo de los contextos, si no hay nada q asignar a n2 no hay nada q procesar
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        iniciarHilos(); 
+//        try {
+//            Thread.sleep(2000);
+//        } catch (InterruptedException ex) {
+//            Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
+//        }
         while(hayTrabajo()) {
             System.out.println("Hay Trabajo"); 
             try {
-                new Scanner(System.in).nextLine();
-                System.out.println("El ciclo actual es " + ciclo);
+//                new Scanner(System.in).nextLine();
+//                System.out.println("El ciclo actual es " + ciclo);
                 // mismo caso, deberia preguntarse primero si hay un contexto para asignar a ambos!! 
                 // puede que en la cola solo haya 1 hilo mas y aqui asigna 2 
                 if (nucleoVacio(n1)) {
