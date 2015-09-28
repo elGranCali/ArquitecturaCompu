@@ -126,6 +126,11 @@ public class interfaz extends javax.swing.JFrame {
 
         jButton3.setBackground(new java.awt.Color(51, 153, 255));
         jButton3.setText("Leer Archivos");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
         getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 160, 30));
 
         pack();
@@ -155,8 +160,13 @@ public class interfaz extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField3ActionPerformed
-        auxiliar.procesar();
+        
     }//GEN-LAST:event_jTextField3ActionPerformed
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        // TODO add your handling code here:
+        auxiliar.iniciar();
+    }//GEN-LAST:event_jButton3ActionPerformed
 
     public void imprima(String string) {
         String newline = "\n";

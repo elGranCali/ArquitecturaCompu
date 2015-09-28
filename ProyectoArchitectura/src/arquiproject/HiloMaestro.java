@@ -37,22 +37,12 @@ public class HiloMaestro {
     Nucleo n1;
     Nucleo n2; 
     private ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
-    
-
-    private void iniciarHilos(){
-        n1.start();
-        n2.start();
-    }
+   
     
     private boolean hayTrabajo(){
         return !cola.isEmpty();
     }
-    
-     private void asignarContexto(Nucleo nucleo) {
-        if (!nucleo.ocupado) {
-            nucleo.setContexto(cola.remove());
-        }
-    }
+   
     
     public boolean nucleoVacio(Nucleo n) {
         
@@ -75,6 +65,12 @@ public class HiloMaestro {
         } 
     }
     
+    private void asignarContexto(Nucleo nucleo) {
+        if (!nucleo.ocupado) {
+            nucleo.setContexto(cola.remove());
+        }
+    }
+    
     public void procesar() {
         
         n1.procesar();
@@ -82,21 +78,34 @@ public class HiloMaestro {
         
     }
     
+    // cuidado, q pasa si solo hay q iniciar 1 hilo??? 
+      private void iniciarHilos(){
+        System.out.println("Se inician los hilos (?)");
+        n1.start();
+        n2.start();
+    }
+    
     public void iniciar(){
-        iniciarHilos(); // Siempre ejecutaran primero el wait
+        // debería preguntarse ademas de q si el nucleo esta ocupado.. de que si hay un contexto para cada nuclio
+        // revisar q en la cola hayan hilos para asignar 2!! 
         asignarContexto(n1);
         asignarContexto(n2);
-        procesar();
+        iniciarHilos(); // Siempre ejecutaran primero el wait // necesario ???
+        // si hay un iniciarHilos, entonces aqui no debería estar el procesar, sino en el run de Nucleo 
+        n1.procesar();
+        //n2.procesar();    // mismo problema q lo de los contextos, si no hay nada q asignar a n2 no hay nada q procesar
         try {
             Thread.sleep(2000);
         } catch (InterruptedException ex) {
             Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
         }
-        while(hayTrabajo()) {     
+        while(hayTrabajo()) {
+            System.out.println("Hay Trabajo"); 
             try {
                 new Scanner(System.in).nextLine();
                 System.out.println("El ciclo actual es " + ciclo);
-                
+                // mismo caso, deberia preguntarse primero si hay un contexto para asignar a ambos!! 
+                // puede que en la cola solo haya 1 hilo mas y aqui asigna 2 
                 if (nucleoVacio(n1)) {
                     asignarContexto(n1);      
                 }
@@ -104,7 +113,7 @@ public class HiloMaestro {
                     asignarContexto(n2);    
                 }
                 lock.await();
-                
+                // procsar(); <-- ? 
                 ciclo++;
             } catch (InterruptedException ex) {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
@@ -117,6 +126,7 @@ public class HiloMaestro {
     
     public String ReadFile(String filename){
         String line = null;
+        System.out.println("Inicio de hilo: "+inicioHilo); 
         cola.add(new Contexto(inicioHilo));
         try {
             File myfile = new File(filename);
@@ -166,23 +176,19 @@ public class HiloMaestro {
         busCiclos = b;
         Nucleo.q = q; 
         Nucleo.m = m;
-        Nucleo.b = b;
-        
+        Nucleo.b = b; 
         String r = "q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos; 
-        System.out.println("q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos);
-        //new interfaz().imprima(r); 
+        System.out.println("q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos); 
     }
     
      public HiloMaestro() {
         ciclo = 1;
         n1 = new Nucleo(lock, "uno", lockFin1, cola);
         n2 = new Nucleo(lock, "dos", lockFin2, cola); 
+        System.out.println("Se crean los 2 nucleos");
+        
     }
     
-    
-     /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
         
         initMemoriaInstrucciones();
@@ -193,8 +199,8 @@ public class HiloMaestro {
             }
         });
         
-        HiloMaestro maestro = new HiloMaestro();
-        maestro.iniciar();
+        //HiloMaestro maestro = new HiloMaestro();
+        //maestro.iniciar();
         
     }
 

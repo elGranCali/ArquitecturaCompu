@@ -86,61 +86,47 @@ public class Nucleo extends Thread {
         return hilillo;
     }
     
-    // es necesario que del hilo maestro conozca ya quantum, b y m. No le entrarían por 
-    // parametros, era solo para que no diese error usar las variables. pc tampoco.  
     void procesar () {
         
         int tiempoTrayendoBloque = 4*(b+m+b);
+        System.out.println("El PC actual es: "+contexto.PC); 
         int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
+        System.out.println("El PC actual es: "+pc); 
         int numBloque = pc/16;
         int numPalabra = pc%16;
-        // grupo de variables que realmente no son variables bus -> lock cacheMiss -> metodo etc
-        boolean busBusy = false; 
-        boolean completadoEnEsteCiclo = true; 
+
+        boolean busBusy = false;              
+        
+        boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
+        
         while (q != 0)  {
-            if (estaEnCache(numBloque)) {  // la instrucción está en cache?
-                // leer instruccion de cache 
+            if (estaEnCache(numBloque)) {       // la instrucción está en cache?
+                System.out.println("Instruccion esta en cache"); 
                 String hilillo = leerInstruccionDeCache(numBloque, numPalabra);
+                System.out.println("Hilillo actual: "+hilillo); 
                 registros = Decodificador.decodificacion(hilillo, registros);
-                
-                if (!completadoEnEsteCiclo) {
-                    /*int e = tiempoTrayendoBloque;   // calculo de ciclos e
-                    while (busBusy) {
-                       
-                        try {
-                            avanzarReloj();
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        
-                    }
-                    // ya puedo leer memoria y traer bloque
-                    int nuevoNumBloque = numBloque%bloquesEnCache;
-                    for (int j=0; j<4; j++) {  // 4 palabras
-                        for (int i=0; i<4; i++) {  // 4 campitos de 1 palabra
-                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria(pc*j+i);
-                        }
-                    }
-                    if (e != 0){
-                        e--;
-                        //avanzarReloj();
-                    }  // Al salir de aquí ya cargó el bloque a cache
-                    */
+                if (!completadoEnEsteCiclo) {   // 2da Entrega
+                    // es una operación SW o LW pues dura mas de un ciclo
+                    // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                 }else {
-                    q--;
-                    pc = pc+4;
-                    lockFin.lock();
+                    q--;                        // Disminuimos Quatum 
+                    pc = pc+4;                  // Aumentamos pc 
+                    lockFin.lock();             // Bloqueamos para escribir "esFin", que nos dice si es hora de meter otro hilo en el procesador
                     esFin = Decodificador.esFin(hilillo);
+                    System.out.println("Variable esFin esta en "+esFin); 
                     lockFin.unlock();
+                    
+                    // Avanzar reloj 
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
-            } else {  // Calcular los ciclos que conlleva traer bloque de memoria
+            } else {    // Instruccion no esta en cache 
                 int c = tiempoTrayendoBloque; 
                 if (busBusy) {
+                    // Avanzar reloj hasta que bus esté desocupado
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
@@ -154,8 +140,9 @@ public class Nucleo extends Thread {
                             cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria(pc*j+i);
                         }
                     }
+                    // mientras que la cantidad de ciclos nueva no termine 
                     if (c != 0){
-                        c--;
+                        c--;    // Solo avance reloj 
                         try {
                             avanzarReloj();
                         } catch (InterruptedException ex) {
@@ -166,21 +153,21 @@ public class Nucleo extends Thread {
                 }
             }
         }//final de while
-        //GuardarContexto();
+        
+        // Guardar el contexto actual
         contexto.PC = pc;
         contexto.registros = registros;
+        // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo
         cola.add(contexto);
     }
     
     
     @Override
     public void run(){
-        while (hayTrabajo) { // Seria hasta que ya no exista trabajo
+        while (hayTrabajo) {    // Seria hasta que ya no exista trabajo
             System.out.println("Núcleo " + id + " iniciando el ciclo");
-        
-            // AQUI SE MANEJARIA LA LOGICA DE CADA NUCLEO
-            // llamar a metodo procesar creado arriba, aun esta en desarrollo
-            //procesar(2,2,2,0);
+            // logica ?? 
+            System.out.println("Ver si entra en el run del nucleo");
             try {
                 avanzarReloj();
             } catch (InterruptedException ex) {
