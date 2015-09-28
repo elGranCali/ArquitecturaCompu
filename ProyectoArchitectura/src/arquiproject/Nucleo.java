@@ -151,7 +151,8 @@ public class Nucleo extends Thread {
                 System.out.println("Colocando el bloque: "+ numBloque + "en el bloque de cache: "+nuevoNumBloque);  
                 cacheInstrucciones[nuevoNumBloque][16] = numBloque;
                 int c = tiempoTrayendoBloque; 
-                if (busBusy) {
+                if (!HiloMaestro.attemptAccess()) {
+                    System.out.println("Bus esta ocupado, buu");
                     // Avanzar reloj hasta que bus esté desocupado
                     try {
                         avanzarReloj();
@@ -159,7 +160,7 @@ public class Nucleo extends Thread {
                         Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 } else {
-                    
+                    System.out.println("Bus esta libre, party hard en memoria");
                     // traer de memoria las 4 palabras del bloque 
                     System.out.println("Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
                     for (int j=0; j<4; j++) {  // 4 palabras
@@ -169,6 +170,7 @@ public class Nucleo extends Thread {
                     }
                     imprimirCache();
                     HiloMaestro.imprimirMemoria();
+                    HiloMaestro.releaseAccess();
                     // mientras que la cantidad de ciclos nueva no termine 
                     if (c != 0){
                         c--;    // Solo avance reloj 

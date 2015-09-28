@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 /**
  *
  * @author Pc
@@ -33,11 +34,20 @@ public class HiloMaestro {
     private final Lock lockFin1 = new ReentrantLock();
     private final Lock lockFin2 = new ReentrantLock();
     private int inicioHilo = 0;
-    
+    private static Semaphore busInstrucciones = new Semaphore(1);
     Nucleo n1;
     Nucleo n2; 
     private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
+    
+    
+   public static boolean attemptAccess() {
+       return busInstrucciones.tryAcquire();
+   }
    
+   public static boolean releaseAccess() {
+       busInstrucciones.release();
+       return true;
+   }
     
     private boolean hayTrabajo(){
         return !(hilosAprocesar==0);
