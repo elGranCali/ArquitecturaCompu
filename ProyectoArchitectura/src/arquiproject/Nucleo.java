@@ -11,7 +11,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentLinkedQueue; 
-import java.util.Queue;
 
 /**
  *
@@ -97,7 +96,7 @@ public class Nucleo extends Thread {
     }
     
     String leerInstruccionDeCache(int numBloque, int numPalabra) {
-        String hilillo = "";
+        String hilillo;
         int op = cacheInstrucciones[numBloque][numPalabra];
         int reg1 = cacheInstrucciones[numBloque][numPalabra+1];
         int reg2 = cacheInstrucciones[numBloque][numPalabra+2];
@@ -131,10 +130,13 @@ public class Nucleo extends Thread {
                 }else {
                     q--;                        // Disminuimos Quatum 
                     pc = pc+4;                  // Aumentamos pc 
-                    lockFin.lock();             // Bloqueamos para escribir "esFin", que nos dice si es hora de meter otro hilo en el procesador
-                    esFin = Decodificador.esFin(hilillo);
-                    System.out.println("Variable esFin esta en "+esFin); 
-                    lockFin.unlock();
+                    lockFin.lock();             
+                    try {
+                        esFin = Decodificador.esFin(hilillo);
+                        System.out.println("Variable esFin esta en "+esFin);
+                    } finally {
+                        lockFin.unlock();
+                    }
                     
                     // Avanzar reloj 
                     try {

@@ -48,21 +48,27 @@ public class HiloMaestro {
         
         if (n.id.equals("uno") ){
             lockFin1.lock();
-            if (n.esFin == true) {
-                n.esFin = false; 
-                return true;
+            try {
+                if (n.esFin == true) {
+                    n.esFin = false;
+                    return true;
+                }
+                hilosAprocesar--;
+            } finally {
+                lockFin1.unlock();
             }
-            hilosAprocesar--;
-            lockFin1.unlock();
             return false; 
         } else {
             lockFin2.lock();
-            if (n.esFin == true) {
-                n.esFin = false; 
-                return true;
-            } 
-            hilosAprocesar--;
-            lockFin2.unlock();
+            try {
+                if (n.esFin == true) {
+                    n.esFin = false;
+                    return true;
+                }
+                hilosAprocesar--;
+            } finally {
+                lockFin2.unlock();
+            }
             return false;
         } 
     }
@@ -90,8 +96,6 @@ public class HiloMaestro {
         while(hayTrabajo()) {
             System.out.println("Hay Trabajo"); 
             try {
-//                new Scanner(System.in).nextLine();
-//                System.out.println("El ciclo actual es " + ciclo);
                 // mismo caso, deberia preguntarse primero si hay un contexto para asignar a ambos!! 
                 // puede que en la cola solo haya 1 hilo mas y aqui asigna 2 
                 if (nucleoVacio(n1)) {
