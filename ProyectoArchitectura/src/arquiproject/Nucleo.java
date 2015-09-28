@@ -162,10 +162,11 @@ public class Nucleo extends Thread {
                     System.out.println("Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
                     for (int j=0; j<4; j++) {  // 4 palabras
                         for (int i=0; i<4; i++) {  // 4 campitos de 1 palabra
-                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria(pc*j+i);
+                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria(4*j+i);
                         }
                     }
-                    imprimirCache(); 
+                    imprimirCache();
+                    HiloMaestro.imprimirMemoria();
                     // mientras que la cantidad de ciclos nueva no termine 
                     if (c != 0){
                         c--;    // Solo avance reloj 

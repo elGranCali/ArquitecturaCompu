@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class HiloMaestro {
     static int totalInstrucciones = 0;
-    static int cantidadHilosCargados = 0;
+    static int hilosAprocesar = 0;
     static int cantidadMemInstrucciones = 640; 
     static int [] memoriaInstrucciones = new int[640];
     private int ciclo;
@@ -40,7 +40,7 @@ public class HiloMaestro {
    
     
     private boolean hayTrabajo(){
-        return !(cantidadHilosCargados==0);
+        return !(hilosAprocesar==0);
     }
    
     
@@ -52,6 +52,7 @@ public class HiloMaestro {
                 n.esFin = false; 
                 return true;
             }
+            hilosAprocesar--;
             lockFin1.unlock();
             return false; 
         } else {
@@ -60,6 +61,7 @@ public class HiloMaestro {
                 n.esFin = false; 
                 return true;
             } 
+            hilosAprocesar--;
             lockFin2.unlock();
             return false;
         } 
@@ -85,11 +87,6 @@ public class HiloMaestro {
         asignarContexto(n1);
         asignarContexto(n2);
         iniciarHilos(); 
-//        try {
-//            Thread.sleep(2000);
-//        } catch (InterruptedException ex) {
-//            Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
-//        }
         while(hayTrabajo()) {
             System.out.println("Hay Trabajo"); 
             try {
@@ -104,7 +101,6 @@ public class HiloMaestro {
                     asignarContexto(n2);    
                 }
                 lock.await();
-                // procsar(); <-- ? 
                 ciclo++;
             } catch (InterruptedException ex) {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
@@ -141,7 +137,7 @@ public class HiloMaestro {
         }catch (Exception e) {
             
         }
-        cantidadHilosCargados++;
+        hilosAprocesar++;
         return line;
     }
     
@@ -151,7 +147,7 @@ public class HiloMaestro {
         }
     }
     
-    public void imprimirMemoria() {
+    public static void imprimirMemoria() {
         String cajita = "";
         for (int i=0; i < cantidadMemInstrucciones; i++){
             cajita += "["+memoriaInstrucciones[i]+"] , ";   
