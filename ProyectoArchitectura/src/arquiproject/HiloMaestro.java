@@ -8,7 +8,6 @@ package arquiproject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue; 
@@ -22,7 +21,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Pc
  */
 public class HiloMaestro {
-    static int totalInstrucciones = 0; 
+    static int totalInstrucciones = 0;
+    static int cantidadHilosCargados = 0;
     static int cantidadMemInstrucciones = 640; 
     static int [] memoriaInstrucciones = new int[640];
     private int ciclo;
@@ -30,13 +30,13 @@ public class HiloMaestro {
     int quantumCiclos;
     int memoriaCiclos;
     int busCiclos; 
-    private Lock lockFin1 = new ReentrantLock();
-    private Lock lockFin2 = new ReentrantLock();
+    private final Lock lockFin1 = new ReentrantLock();
+    private final Lock lockFin2 = new ReentrantLock();
     private int inicioHilo = 0;
     
     Nucleo n1;
     Nucleo n2; 
-    private ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
+    private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
    
     
     private boolean hayTrabajo(){
@@ -66,7 +66,7 @@ public class HiloMaestro {
     }
     
     private void asignarContexto(Nucleo nucleo) {
-        if (!nucleo.ocupado) {
+        if (!nucleo.ocupado && !cola.isEmpty()) {
             nucleo.setContexto(cola.remove());
         }
     }
@@ -123,7 +123,9 @@ public class HiloMaestro {
         }
     }
         
-    
+    /* Evento que se dispara cuando se seleccionan los hilos 
+    * a correr (Carga de archivos)
+    */
     public String ReadFile(String filename){
         String line = null;
         System.out.println("Inicio de hilo: "+inicioHilo); 
@@ -148,6 +150,7 @@ public class HiloMaestro {
         }catch (Exception e) {
             
         }
+        cantidadHilosCargados++;
         return line;
     }
     
@@ -174,7 +177,7 @@ public class HiloMaestro {
         quantumCiclos = q;
         memoriaCiclos = m;
         busCiclos = b;
-        Nucleo.q = q; 
+        Nucleo.QUAMTUM = q; 
         Nucleo.m = m;
         Nucleo.b = b; 
         String r = "q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos; 
@@ -188,22 +191,4 @@ public class HiloMaestro {
         System.out.println("Se crean los 2 nucleos");
         
     }
-    
-    public static void main(String[] args) {
-        
-        initMemoriaInstrucciones();
-        java.awt.EventQueue.invokeLater(new Runnable() {
-        public void run() {
-                interfaz inter = new interfaz();
-                inter.setVisible(true);
-            }
-        });
-        
-        //HiloMaestro maestro = new HiloMaestro();
-        //maestro.iniciar();
-        
-    }
-
-  
-    
 } // Final de clase

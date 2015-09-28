@@ -28,12 +28,13 @@ public class Nucleo extends Thread {
     int [][] cacheInstrucciones = new int[8][17];
     boolean esFin = false;
     private Lock lockFin;
-    public static int q = 20;
+    public static int QUAMTUM = 20;
     public static int m = 2;
     public static int b = 2;
     private ConcurrentLinkedQueue cola;
     
     public Nucleo(CyclicBarrier lock, String id, Lock lockFin, ConcurrentLinkedQueue cola){
+        contexto = null;
         this.cola = cola;
         this.barreraLock = lock;
         this.lockFin = lockFin;
@@ -44,6 +45,10 @@ public class Nucleo extends Thread {
         for(int i = 0; i<33; i++){
             registros[i]=0;
         }
+    }
+    
+    public void reiniciarQuatum(){
+        
     }
     
     public void setContexto(Contexto contexto) {
@@ -86,20 +91,29 @@ public class Nucleo extends Thread {
         return hilillo;
     }
     
-    void procesar () {
-        
+    public void procesar () {
         int tiempoTrayendoBloque = 4*(b+m+b);
-        System.out.println("El PC actual es: "+contexto.PC); 
-        int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
-        System.out.println("El PC actual es: "+pc); 
-        int numBloque = pc/16;
-        int numPalabra = pc%16;
-
-        boolean busBusy = false;              
+        boolean busBusy = false;   
         
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
-        
+        int q = QUAMTUM;
         while (q != 0)  {
+            // Caso de que no tenga un contexto asignado el debe seguir corriendo
+            if (contexto == null) {
+                try {
+                    avanzarReloj();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                continue;  // Salga de esta iteración hasta que exista un contexto
+            }
+            
+            System.out.println("El PC actual es: "+contexto.PC); 
+            int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
+            System.out.println("El PC actual es: "+pc);       
+            int numBloque = pc/16;
+            int numPalabra = pc%16;
+            
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Instruccion esta en cache"); 
                 String hilillo = leerInstruccionDeCache(numBloque, numPalabra);
@@ -152,10 +166,10 @@ public class Nucleo extends Thread {
                     // Al salir de aquí ya cargó el bloque a cache
                 }
             }
+            contexto.PC = pc;
         }//final de while
-        
+        q = QUAMTUM;
         // Guardar el contexto actual
-        contexto.PC = pc;
         contexto.registros = registros;
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo
         cola.add(contexto);

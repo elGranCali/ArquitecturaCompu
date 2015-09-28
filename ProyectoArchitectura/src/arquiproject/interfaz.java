@@ -20,7 +20,8 @@ public class interfaz extends javax.swing.JFrame {
     /**
      * Creates new form interfaz
      */
-    HiloMaestro auxiliar = new HiloMaestro();
+    HiloMaestro auxiliar = new HiloMaestro(); // Se inicia el Hilo Maestro
+    
     public interfaz() {
         initComponents();
         
@@ -48,6 +49,7 @@ public class interfaz extends javax.swing.JFrame {
         jTextField3 = new javax.swing.JTextField();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -60,11 +62,11 @@ public class interfaz extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 540, Short.MAX_VALUE)
+            .addGap(0, 550, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(jPanel1Layout.createSequentialGroup()
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 520, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 20, Short.MAX_VALUE)))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 550, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGap(0, 0, Short.MAX_VALUE)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -83,7 +85,7 @@ public class interfaz extends javax.swing.JFrame {
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 20, -1, -1));
 
         jButton1.setBackground(new java.awt.Color(102, 153, 255));
-        jButton1.setText("Seleccionar Archivos");
+        jButton1.setText("Seleccionar hilos");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -116,16 +118,16 @@ public class interfaz extends javax.swing.JFrame {
         getContentPane().add(jTextField3, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 40, 31, -1));
 
         jButton2.setBackground(new java.awt.Color(0, 204, 153));
-        jButton2.setText("Guardar");
+        jButton2.setText("Guardar paramétros");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
         });
-        getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 37, 80, -1));
+        getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 37, 140, -1));
 
         jButton3.setBackground(new java.awt.Color(51, 153, 255));
-        jButton3.setText("Leer Archivos");
+        jButton3.setText("Iniciar simulación");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton3ActionPerformed(evt);
@@ -133,9 +135,19 @@ public class interfaz extends javax.swing.JFrame {
         });
         getContentPane().add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 120, 160, 30));
 
+        jButton4.setText("Parar");
+        jButton4.setName("parar"); // NOI18N
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+        getContentPane().add(jButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 170, 160, 30));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    // Evento para guardar los hilos en memoria
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         JFileChooser chooser = new JFileChooser();
@@ -147,7 +159,8 @@ public class interfaz extends javax.swing.JFrame {
             auxiliar.ReadFile(text);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
-
+    
+    // Evento de personalizar parámetros de simulación
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         String qCiclos = jTextField1.getText();
         String mCiclos = jTextField2.getText();
@@ -163,10 +176,17 @@ public class interfaz extends javax.swing.JFrame {
         
     }//GEN-LAST:event_jTextField3ActionPerformed
 
+    // Evento del Iniciar simulación
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
         auxiliar.iniciar();
     }//GEN-LAST:event_jButton3ActionPerformed
+
+    // Evento de parar los threads
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton4ActionPerformed
 
     public void imprima(String string) {
         String newline = "\n";
@@ -210,6 +230,7 @@ public class interfaz extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
