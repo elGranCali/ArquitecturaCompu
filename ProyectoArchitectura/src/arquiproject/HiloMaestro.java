@@ -22,7 +22,7 @@ import java.util.concurrent.Semaphore;
  */
 public class HiloMaestro {
     static int totalInstrucciones = 0;
-    static int hilosAprocesar = 0;
+    public static int hilosAprocesar = 0;
     static int cantidadMemInstrucciones = 640; 
     static int [] memoriaInstrucciones = new int[640];
     private int ciclo;
@@ -37,6 +37,7 @@ public class HiloMaestro {
     Nucleo n1;
     Nucleo n2; 
     private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
+    public static final ConcurrentLinkedQueue<Contexto> colaDeTerminados = new ConcurrentLinkedQueue<Contexto>();
     
     
    public static boolean attemptAccess() {
@@ -48,14 +49,13 @@ public class HiloMaestro {
        return true;
    }
     
-    private boolean hayTrabajo(){
-        if (hilosAprocesar==0){
-            n1.setEstado(false);
-            n2.setEstado(false);
-        }
+    public static synchronized boolean hayTrabajo(){
         return !(hilosAprocesar==0);
     }
    
+    public static synchronized void terminarHilo(){
+        hilosAprocesar--;
+    }
     
     public boolean nucleoVacio(Nucleo n) {
         
@@ -66,7 +66,6 @@ public class HiloMaestro {
                     n.esFin = false;
                     return true;
                 }
-                hilosAprocesar--;
             } finally {
                 lockFin1.unlock();
             }
@@ -78,7 +77,6 @@ public class HiloMaestro {
                     n.esFin = false;
                     return true;
                 }
-                hilosAprocesar--;
             } finally {
                 lockFin2.unlock();
             }
@@ -107,7 +105,7 @@ public class HiloMaestro {
         asignarContexto(n2);
         iniciarHilos(); 
         while(hayTrabajo()) {
-            //System.out.println("Hay Trabajo"); 
+            System.out.println("Hay Trabajo"); 
             try {
                 // mismo caso, deberia preguntarse primero si hay un contexto para asignar a ambos!! 
                 // puede que en la cola solo haya 1 hilo mas y aqui asigna 2 
@@ -125,7 +123,11 @@ public class HiloMaestro {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        return "Hello";
+        String ans = "";
+        for (Contexto con : colaDeTerminados) {
+            ans += con.toString();
+        }
+        return ans;
     }
         
     /* Evento que se dispara cuando se seleccionan los hilos 
@@ -191,9 +193,8 @@ public class HiloMaestro {
     
      public HiloMaestro() {
         ciclo = 1;
-        n1 = new Nucleo(lock, "uno", lockFin1, cola);
-        n2 = new Nucleo(lock, "dos", lockFin2, cola); 
-        System.out.println("Se crean los 2 nucleos");
-        
+        n1 = new Nucleo(lock, "uno", lockFin1, cola, colaDeTerminados);
+        n2 = new Nucleo(lock, "dos", lockFin2, cola, colaDeTerminados); 
+        System.out.println("Se crean los 2 nucleos");      
     }
 } // Final de clase

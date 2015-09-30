@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Nucleo extends Thread {
     private final CyclicBarrier barreraLock;
     public String id;
-    private boolean hayTrabajo;
     public boolean ocupado;
     public Contexto contexto;
     int [] registros; 
@@ -31,14 +30,15 @@ public class Nucleo extends Thread {
     public static int m = 2;
     public static int b = 2;
     private ConcurrentLinkedQueue<Contexto> cola;
+        private ConcurrentLinkedQueue<Contexto> coladeTerminados;
     
-    public Nucleo(CyclicBarrier lock, String id, Lock lockFin, ConcurrentLinkedQueue<Contexto> cola){
+    public Nucleo(CyclicBarrier lock, String id, Lock lockFin, ConcurrentLinkedQueue<Contexto> cola, ConcurrentLinkedQueue<Contexto> coladeTerminados){
         contexto = null;
         this.cola = cola;
+        this.coladeTerminados = coladeTerminados;
         this.barreraLock = lock;
         this.lockFin = lockFin;
         this.id = id;
-        hayTrabajo = true;
         ocupado = false;
         registros = new int[33];
         for(int i = 0; i<33; i++){
@@ -71,10 +71,7 @@ public class Nucleo extends Thread {
         this.contexto = contexto;
     }
     
-    public void setEstado(boolean hayTrabajo){
-        this.hayTrabajo = hayTrabajo;
-    }
-    
+   
     // Este método puede ser llamado en cualquier momento que se termine un ciclo
     private void avanzarReloj() throws InterruptedException{
         try {
@@ -112,7 +109,7 @@ public class Nucleo extends Thread {
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         System.out.println("EL QUAMTUM ES: " + q);
-        while (q != 0 || esFin)  {       // Ejecución de todas las instrucciones que comprenden un quantum
+        while (q != 0 && !esFin)  {       // Ejecución de todas las instrucciones que comprenden un quantum
             int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
             System.out.println("El PC actual es: "+pc);       
             int numBloque = pc/16;
@@ -133,6 +130,11 @@ public class Nucleo extends Thread {
                     lockFin.lock();
                     try {
                         esFin = Decodificador.esFin(hilillo);
+                        if (esFin){
+                            System.out.println("Hilo antes" + HiloMaestro.hilosAprocesar);
+                            HiloMaestro.terminarHilo(); 
+                            System.out.println("Hilo despuess" + HiloMaestro.hilosAprocesar);
+                        }
                         //System.out.println("Variable esFin esta en "+esFin);
                     } finally {
                         lockFin.unlock();
@@ -190,21 +192,26 @@ public class Nucleo extends Thread {
         contexto.registros = registros;
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo
         System.out.println("Se agrega contexto a la cola");  
-        cola.add(contexto); // Guardamos el contexto
+        if (esFin) {
+            coladeTerminados.add(contexto);
+        } else {
+            cola.add(contexto); // Guardamos el contexto     
+        }
         contexto = null; // Retiramos el contexto del nuecleo
     }
     
     
     @Override
     public void run(){
-        while (hayTrabajo) {    // Seria hasta que ya no exista trabajo
+        while (HiloMaestro.hayTrabajo()) {    // Seria hasta que ya no exista trabajo
             // Caso de que no tenga un contexto asignado el debe seguir corriendo  
             if (contexto == null) {
+                System.out.println("Hilos" + HiloMaestro.hilosAprocesar);
                 try {
                     avanzarReloj();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                }              
                 continue;  // Salga de esta iteración hasta que exista un contexto
             }  
             System.out.println("Núcleo " + id + " iniciando el quantum");
