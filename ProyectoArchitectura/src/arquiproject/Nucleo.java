@@ -112,7 +112,7 @@ public class Nucleo extends Thread {
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         System.out.println("EL QUAMTUM ES: " + q);
-        while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
+        while (q != 0 || esFin)  {       // Ejecución de todas las instrucciones que comprenden un quantum
             int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
             System.out.println("El PC actual es: "+pc);       
             int numBloque = pc/16;
@@ -130,14 +130,13 @@ public class Nucleo extends Thread {
                 }else {
                     q--;                        // Disminuimos Quatum 
                     pc = pc+4;                  // Aumentamos pc 
-                    lockFin.lock();             
+                    lockFin.lock();
                     try {
                         esFin = Decodificador.esFin(hilillo);
-                        System.out.println("Variable esFin esta en "+esFin);
+                        //System.out.println("Variable esFin esta en "+esFin);
                     } finally {
                         lockFin.unlock();
                     }
-                    
                     // Avanzar reloj 
                     try {
                         avanzarReloj();
@@ -212,5 +211,6 @@ public class Nucleo extends Thread {
             procesarQuantum(); // Se procesa un quantum 
             System.out.println("Núcleo " + id + " terminado quantum");  
         }
+        System.out.println("TERMINO EL NUCLEO");
     }        
 }

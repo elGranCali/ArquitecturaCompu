@@ -7,23 +7,23 @@ package arquiproject;
 
 import java.io.File;
 import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter; 
+
 
 
 /**
  *
  * @author Pc
  */
-public class interfaz extends javax.swing.JFrame {
+public class Interfaz extends javax.swing.JFrame {
 
     /**
-     * Creates new form interfaz
+     * Creates new form Interfaz
      */
     HiloMaestro auxiliar = new HiloMaestro(); // Se inicia el Hilo Maestro
     
-    public interfaz() {
+    public Interfaz() {
         initComponents();
+        setVisible(true);
         
     }
 
@@ -179,12 +179,13 @@ public class interfaz extends javax.swing.JFrame {
     // Evento del Iniciar simulación
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
-        auxiliar.iniciar();
+        String resultado = auxiliar.iniciar();
+        imprima(resultado);
     }//GEN-LAST:event_jButton3ActionPerformed
 
     // Evento de parar los threads
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-
+        imprima("sdfsadf");
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton4ActionPerformed
 
@@ -209,21 +210,21 @@ public class interfaz extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Interfaz.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
 
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new interfaz().setVisible(true);
-            }
-        });
-
+//        java.awt.EventQueue.invokeLater(new Runnable() {
+//            public void run() {
+//                    new Interfaz().setVisible(true);
+//            }
+//        });
+         Interfaz interfaz = new Interfaz();
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

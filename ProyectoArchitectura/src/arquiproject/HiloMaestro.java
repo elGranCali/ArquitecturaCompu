@@ -8,7 +8,6 @@ package arquiproject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.util.Scanner;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 import java.util.concurrent.CyclicBarrier;
@@ -50,6 +49,10 @@ public class HiloMaestro {
    }
     
     private boolean hayTrabajo(){
+        if (hilosAprocesar==0){
+            n1.setEstado(false);
+            n2.setEstado(false);
+        }
         return !(hilosAprocesar==0);
     }
    
@@ -97,14 +100,14 @@ public class HiloMaestro {
         n2.start();
     }
     
-    public void iniciar(){
+    public String iniciar(){
         // debería preguntarse ademas de q si el nucleo esta ocupado.. de que si hay un contexto para cada nuclio
         // revisar q en la cola hayan hilos para asignar 2!! 
         asignarContexto(n1);
         asignarContexto(n2);
         iniciarHilos(); 
         while(hayTrabajo()) {
-            System.out.println("Hay Trabajo"); 
+            //System.out.println("Hay Trabajo"); 
             try {
                 // mismo caso, deberia preguntarse primero si hay un contexto para asignar a ambos!! 
                 // puede que en la cola solo haya 1 hilo mas y aqui asigna 2 
@@ -122,6 +125,7 @@ public class HiloMaestro {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        return "Hello";
     }
         
     /* Evento que se dispara cuando se seleccionan los hilos 

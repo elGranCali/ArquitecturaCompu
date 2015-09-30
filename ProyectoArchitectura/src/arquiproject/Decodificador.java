@@ -98,7 +98,8 @@ public class Decodificador {
                 }
                 break;*/
             case "63":
-                System.exit(0);
+                System.out.println("Ya termino el hilo");
+                //System.exit(0);
                 break;
             default:
                 break;
