@@ -99,18 +99,16 @@ public class Nucleo extends Thread {
     
     public void procesarQuantum () {
         int tiempoTrayendoBloque = 4*(b+m+b);
-        System.out.println("El tiempo trayendo bloque para esta simulacion es: "+tiempoTrayendoBloque);       
-        boolean busBusy = false;   
+        System.out.println("El tiempo trayendo bloque para esta simulacion es: "+tiempoTrayendoBloque);        
         boolean agregarATerminados = false;
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         System.out.println("EL QUAMTUM ES: " + q);
         while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
-            int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
-            System.out.println("El PC actual es: "+pc);       
-            int numBloque = pc/16;
+            System.out.println("El PC actual es: "+contexto.PC);       
+            int numBloque = contexto.PC/16;
             System.out.println("Buscando numero de bloque: "+numBloque);  
-            int numPalabra = pc%16;
+            int numPalabra = contexto.PC%16;
             
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Instruccion esta en cache"); 
@@ -121,13 +119,13 @@ public class Nucleo extends Thread {
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                 }else {
                     q--;                        // Disminuimos Quatum 
-                    pc = pc+4;                  // Aumentamos pc 
+                    contexto.PC += 4;                  // Aumentamos pc 
                     lockFin.lock();
                     System.out.println("Dentro del Lock"); 
                     try {
                         esFin = Decodificador.esFin(hilillo);
-                        agregarATerminados = true;
                         if (esFin){
+                            agregarATerminados = true;
                             HiloMaestro.terminarHilo(); 
                             try {
                                 avanzarReloj();
@@ -184,10 +182,10 @@ public class Nucleo extends Thread {
                     // Al salir de aquí ya cargó el bloque a cache
                 }
             }
-            contexto.PC = pc;
         }//final de while
         System.out.println("Termina de procesar quantum. El contexto guardado es: PC = "+contexto.PC);  
         q = QUAMTUM;
+        ocupado= false;
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo  
         if (agregarATerminados) {
             System.out.println("Se agrega contexto a la cola de terminados");
