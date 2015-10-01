@@ -17,7 +17,7 @@ import javax.swing.JFileChooser;
 public class Interfaz extends javax.swing.JFrame {
 
     /**
-     * Creates new form Interfaz
+     * Creates new form 
      */
     HiloMaestro auxiliar = new HiloMaestro(); // Se inicia el Hilo Maestro
     
@@ -185,7 +185,7 @@ public class Interfaz extends javax.swing.JFrame {
 
     // Evento de parar los threads
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        imprima("sdfsadf");
+        imprima("sdf");
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton4ActionPerformed
 
