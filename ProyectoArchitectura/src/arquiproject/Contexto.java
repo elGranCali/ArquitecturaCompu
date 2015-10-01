@@ -26,7 +26,7 @@ public class Contexto {
         String respuesta = "****************************************************";
         respuesta += "\nEl valor del PC es " + PC + " y los registros son: ";
         for (int i = 0 ; i< 33; i++ ) {
-            respuesta += "\nRegistro " + i+1 +": " + registros[i];
+            respuesta += "\nRegistro " + i +": " + registros[i];
         }
         respuesta += "\n****************************************************";
         return respuesta;

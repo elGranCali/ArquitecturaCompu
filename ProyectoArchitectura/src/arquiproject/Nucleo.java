@@ -131,9 +131,13 @@ public class Nucleo extends Thread {
                     try {
                         esFin = Decodificador.esFin(hilillo);
                         if (esFin){
-                            System.out.println("Hilo antes" + HiloMaestro.hilosAprocesar);
                             HiloMaestro.terminarHilo(); 
-                            System.out.println("Hilo despuess" + HiloMaestro.hilosAprocesar);
+                            try {
+                                avanzarReloj();
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            break;
                         }
                         //System.out.println("Variable esFin esta en "+esFin);
                     } finally {
@@ -173,7 +177,7 @@ public class Nucleo extends Thread {
                     HiloMaestro.imprimirMemoria();
                     HiloMaestro.releaseAccess();
                     // mientras que la cantidad de ciclos nueva no termine 
-                    if (c != 0){
+                    while (c != 0){
                         c--;    // Solo avance reloj 
                         try {
                             avanzarReloj();
@@ -218,6 +222,6 @@ public class Nucleo extends Thread {
             procesarQuantum(); // Se procesa un quantum 
             System.out.println("Núcleo " + id + " terminado quantum");  
         }
-        System.out.println("TERMINO EL NUCLEO");
+        System.out.println("TERMINO EL NUCLEO " +id);
     }        
 }
