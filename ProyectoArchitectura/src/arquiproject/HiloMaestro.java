@@ -133,8 +133,15 @@ public class HiloMaestro {
             } 
         }
         String ans = "EL CICLO ES: " + ciclo + "\n";
-        for (Contexto con : colaDeTerminados) {
-            ans += con.toString();
+        // Este es un delay para esperar que los hilillos se guarden en la cola de terminos y puedan ser impresos
+        Thread t = Thread.currentThread();
+        try {
+            t.sleep(2000);
+        } catch (InterruptedException ex) {
+            System.out.println("Fallo en el delay de la cola de terminados");
+        }
+        while (colaDeTerminados.peek() != null) {
+            ans += colaDeTerminados.poll().toString();
         }
         return ans;
     }

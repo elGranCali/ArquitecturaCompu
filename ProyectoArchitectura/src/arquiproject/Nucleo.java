@@ -21,7 +21,6 @@ public class Nucleo extends Thread {
     public String id;
     public boolean ocupado;
     public Contexto contexto;
-    int [] registros; 
     int bloquesEnCache = 8; 
     int [][] cacheInstrucciones = new int[8][17];
     boolean esFin = false;
@@ -40,10 +39,6 @@ public class Nucleo extends Thread {
         this.lockFin = lockFin;
         this.id = id;
         ocupado = false;
-        registros = new int[33];
-        for(int i = 0; i<33; i++){
-            registros[i]=0;
-        }
         // inicializacion de la cache en -1's
         for (int i=0; i < 8; i++){
             for (int j=0; j < 17; j++) {
@@ -120,7 +115,6 @@ public class Nucleo extends Thread {
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Instruccion esta en cache"); 
                 String hilillo = leerInstruccionDeCache(numBloque, numPalabra);
-                System.out.println("Hilillo actual: "+hilillo); 
                 Decodificador.decodificacion(hilillo, contexto);
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
@@ -129,6 +123,7 @@ public class Nucleo extends Thread {
                     q--;                        // Disminuimos Quatum 
                     pc = pc+4;                  // Aumentamos pc 
                     lockFin.lock();
+                    System.out.println("Dentro del Lock"); 
                     try {
                         esFin = Decodificador.esFin(hilillo);
                         agregarATerminados = true;
@@ -193,8 +188,6 @@ public class Nucleo extends Thread {
         }//final de while
         System.out.println("Termina de procesar quantum. El contexto guardado es: PC = "+contexto.PC);  
         q = QUAMTUM;
-        // Guardar el contexto actual
-        contexto.registros = registros;
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo  
         if (agregarATerminados) {
             System.out.println("Se agrega contexto a la cola de terminados");
