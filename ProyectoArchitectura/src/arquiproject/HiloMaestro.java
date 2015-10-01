@@ -16,6 +16,8 @@ import java.util.logging.Logger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 /**
  *
  * @author Pc
@@ -104,26 +106,31 @@ public class HiloMaestro {
         asignarContexto(n1);
         asignarContexto(n2);
         iniciarHilos(); 
-        while(hayTrabajo()) {
+        while(true) {
             System.out.println("Hay Trabajo"); 
             try {
-                // mismo caso, deberia preguntarse primero si hay un contexto para asignar a ambos!! 
-                // puede que en la cola solo haya 1 hilo mas y aqui asigna 2 
                 if (nucleoVacio(n1)) {
                     asignarContexto(n1);      
                 }
                 if (nucleoVacio(n2)) {
                     asignarContexto(n2);    
                 }
-                lock.await();
+                if (hayTrabajo()) {
+                    lock.await();
+                } else {
+                    if (lock.getNumberWaiting() != 0) {
+                        lock.reset();
+                    }
+                    break;
+                }
                 ciclo++;
             } catch (InterruptedException ex) {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
             } catch (BrokenBarrierException ex) {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            } 
         }
-        String ans = "";
+        String ans = "EL CICLO ES: " + ciclo + "\n";
         for (Contexto con : colaDeTerminados) {
             ans += con.toString();
         }

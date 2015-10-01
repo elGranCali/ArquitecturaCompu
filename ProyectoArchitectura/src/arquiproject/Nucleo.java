@@ -77,7 +77,7 @@ public class Nucleo extends Thread {
         try {
             barreraLock.await();
         } catch (BrokenBarrierException ex) {
-            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Se reseteo la barrera");;
         }
     }
     
@@ -109,7 +109,7 @@ public class Nucleo extends Thread {
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         System.out.println("EL QUAMTUM ES: " + q);
-        while (q != 0 && !esFin)  {       // Ejecución de todas las instrucciones que comprenden un quantum
+        while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
             int pc = contexto.PC; // dirección apartir de la cuál leer la instruccion
             System.out.println("El PC actual es: "+pc);       
             int numBloque = pc/16;
@@ -139,7 +139,6 @@ public class Nucleo extends Thread {
                             }
                             break;
                         }
-                        //System.out.println("Variable esFin esta en "+esFin);
                     } finally {
                         lockFin.unlock();
                     }
@@ -162,7 +161,7 @@ public class Nucleo extends Thread {
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
-                        Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                        System.out.println("AVANCEEEE EN NUCLEO" + id);;
                     }
                 } else {
                     System.out.println("Bus esta libre, party hard en memoria");
