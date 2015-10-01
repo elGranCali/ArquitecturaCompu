@@ -16,7 +16,7 @@ public class Decodificador {
     static Contexto contexto;
     
     
-    public static void decodificacion(String instruccion , int[] registros, Contexto contextoRecibido){
+    public static void decodificacion(String instruccion , Contexto contextoRecibido){
         contexto = contextoRecibido;
         int posEspacio = instruccion.indexOf(" ");
         String codOp = instruccion.substring(0, posEspacio);
@@ -44,24 +44,24 @@ public class Decodificador {
         int r3 = Integer.parseInt(registro3);
         switch(codOp){
             case "8":
-                registros[r2] = registros[r1]+r3;
-                System.out.print(registros[r2]);
+                contexto.registros[r2] = contexto.registros[r1]+r3;
+                System.out.print(contexto.registros[r2]);
                 break;
             case "32":
-                registros[r3]=registros[r1]+registros[r2];
-                System.out.print(registros[r3]);
+                contexto.registros[r3]= contexto.registros[r1]+contexto.registros[r2];
+                System.out.print(contexto.registros[r3]);
                 break;
             case "34":
-                registros[r3]=registros[r1]-registros[r2];
-                System.out.print(registros[r3]);
+                contexto.registros[r3]=contexto.registros[r1]-contexto.registros[r2];
+                System.out.print(contexto.registros[r3]);
                 break;
             case "12":
-                registros[r3]=registros[r1]*registros[r2];
-                System.out.print(registros[r3]);
+                contexto.registros[r3]=contexto.registros[r1]*contexto.registros[r2];
+                System.out.print(contexto.registros[r3]);
                 break;
             case "14":
-                registros[r3]=registros[r1]/registros[r2];
-                System.out.print(registros[r3]);
+                contexto.registros[r3]=contexto.registros[r1]/contexto.registros[r2];
+                System.out.print(contexto.registros[r3]);
                 break;
             /*case "35":
                 registros[r2]= M*(r3+registros[r1]);
@@ -70,20 +70,20 @@ public class Decodificador {
             /*case "43":
                 break;*/
             case "4":
-                if(registros[r1] == 0)
+                if(contexto.registros[r1] == 0)
                     contexto.PC = contexto.PC+(r3*4);                             
                 break;
             case "5":
-                if(registros[r1]!= 0)
+                if(contexto.registros[r1]!= 0)
                     contexto.PC = contexto.PC+(r3*4);
                 break;
             case "3":
-                registros[31] = contexto.PC;
+                contexto.registros[31] = contexto.PC;
                 contexto.PC += r3;
-                System.out.print("PC="+contexto.PC+" R31="+registros[31]);
+                System.out.print("PC="+contexto.PC+" R31="+contexto.registros[31]);
                 break;
             case "2":
-                contexto.PC = registros[r1];
+                contexto.PC = contexto.registros[r1];
                 System.out.print("PC="+contexto.PC);
                 break;
             /*case "11":

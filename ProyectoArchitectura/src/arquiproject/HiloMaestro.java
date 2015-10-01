@@ -116,7 +116,7 @@ public class HiloMaestro {
                     asignarContexto(n2);    
                 }
                 if (hayTrabajo()) {
-                    lock.await();
+                    lock.await(1,TimeUnit.SECONDS);
                 } else {
                     if (lock.getNumberWaiting() != 0) {
                         lock.reset();
@@ -128,6 +128,8 @@ public class HiloMaestro {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
             } catch (BrokenBarrierException ex) {
                 Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (TimeoutException ex) {
+                System.out.println("Se acabo el tiempo");
             } 
         }
         String ans = "EL CICLO ES: " + ciclo + "\n";

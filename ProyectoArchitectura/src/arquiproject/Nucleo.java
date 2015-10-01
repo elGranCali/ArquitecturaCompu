@@ -105,7 +105,8 @@ public class Nucleo extends Thread {
     public void procesarQuantum () {
         int tiempoTrayendoBloque = 4*(b+m+b);
         System.out.println("El tiempo trayendo bloque para esta simulacion es: "+tiempoTrayendoBloque);       
-        boolean busBusy = false;          
+        boolean busBusy = false;   
+        boolean agregarATerminados = false;
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         System.out.println("EL QUAMTUM ES: " + q);
@@ -120,7 +121,7 @@ public class Nucleo extends Thread {
                 System.out.println("Instruccion esta en cache"); 
                 String hilillo = leerInstruccionDeCache(numBloque, numPalabra);
                 System.out.println("Hilillo actual: "+hilillo); 
-                Decodificador.decodificacion(hilillo, registros, contexto);
+                Decodificador.decodificacion(hilillo, contexto);
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
@@ -130,6 +131,7 @@ public class Nucleo extends Thread {
                     lockFin.lock();
                     try {
                         esFin = Decodificador.esFin(hilillo);
+                        agregarATerminados = true;
                         if (esFin){
                             HiloMaestro.terminarHilo(); 
                             try {
@@ -169,7 +171,7 @@ public class Nucleo extends Thread {
                     System.out.println("Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
                     for (int j=0; j<4; j++) {  // 4 palabras
                         for (int i=0; i<4; i++) {  // 4 campitos de 1 palabra
-                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria(4*j+i);
+                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria((nuevoNumBloque*16)+4*j+i);
                         }
                     }
                     imprimirCache();
@@ -193,11 +195,12 @@ public class Nucleo extends Thread {
         q = QUAMTUM;
         // Guardar el contexto actual
         contexto.registros = registros;
-        // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo
-        System.out.println("Se agrega contexto a la cola");  
-        if (esFin) {
+        // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo  
+        if (agregarATerminados) {
+            System.out.println("Se agrega contexto a la cola de terminados");
             coladeTerminados.add(contexto);
         } else {
+            System.out.println("Se agrega contexto a la cola");
             cola.add(contexto); // Guardamos el contexto     
         }
         contexto = null; // Retiramos el contexto del nuecleo
