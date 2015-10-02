@@ -29,7 +29,7 @@ public class Nucleo extends Thread {
     public static int m = 2;
     public static int b = 2;
     private ConcurrentLinkedQueue<Contexto> cola;
-        private ConcurrentLinkedQueue<Contexto> coladeTerminados;
+    private ConcurrentLinkedQueue<Contexto> coladeTerminados;
     
     public Nucleo(CyclicBarrier lock, String id, Lock lockFin, ConcurrentLinkedQueue<Contexto> cola, ConcurrentLinkedQueue<Contexto> coladeTerminados){
         contexto = null;

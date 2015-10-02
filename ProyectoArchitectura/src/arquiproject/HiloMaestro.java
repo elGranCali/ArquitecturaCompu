@@ -75,7 +75,7 @@ public class HiloMaestro {
         } else {
             lockFin2.lock();
             try {
-                if (n.esFin == true) {
+                if (n.esFin == true || n.ocupado == false) {
                     n.esFin = false;
                     return true;
                 }
@@ -166,11 +166,10 @@ public class HiloMaestro {
                 }
                 inicioHilo++;                
             }
-            //imprimirMemoria();
             System.out.println("Archivo "+filename+" procesado.");
             System.out.println("Contexto agregado");
         }catch (Exception e) {
-            
+            System.out.println("Error al leer archivo");
         }
         hilosAprocesar++;
         return line;
