@@ -64,6 +64,7 @@ public class Nucleo extends Thread {
     
     public void setContexto(Contexto contexto) {
         this.contexto = contexto;
+        ocupado = true;
     }
     
    
@@ -121,7 +122,6 @@ public class Nucleo extends Thread {
                     q--;                        // Disminuimos Quatum 
                     contexto.PC += 4;                  // Aumentamos pc 
                     lockFin.lock();
-                    System.out.println("Dentro del Lock"); 
                     try {
                         esFin = Decodificador.esFin(hilillo);
                         if (esFin){

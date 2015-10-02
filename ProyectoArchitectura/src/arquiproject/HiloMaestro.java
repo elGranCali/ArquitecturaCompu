@@ -35,11 +35,11 @@ public class HiloMaestro {
     private final Lock lockFin1 = new ReentrantLock();
     private final Lock lockFin2 = new ReentrantLock();
     private int inicioHilo = 0;
-    private static Semaphore busInstrucciones = new Semaphore(1);
+    private final static Semaphore busInstrucciones = new Semaphore(1);
     Nucleo n1;
     Nucleo n2; 
-    private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<Contexto>();
-    public static final ConcurrentLinkedQueue<Contexto> colaDeTerminados = new ConcurrentLinkedQueue<Contexto>();
+    private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<>();
+    public static final ConcurrentLinkedQueue<Contexto> colaDeTerminados = new ConcurrentLinkedQueue<>();
     
     
    public static boolean attemptAccess() {
@@ -64,7 +64,7 @@ public class HiloMaestro {
         if (n.id.equals("uno") ){
             lockFin1.lock();
             try {
-                if (n.esFin == true) {
+                if (n.esFin == true || n.ocupado == false) {
                     n.esFin = false;
                     return true;
                 }
@@ -134,9 +134,8 @@ public class HiloMaestro {
         }
         String ans = "EL CICLO ES: " + ciclo + "\n";
         // Este es un delay para esperar que los hilillos se guarden en la cola de terminos y puedan ser impresos
-        Thread t = Thread.currentThread();
         try {
-            t.sleep(2000);
+            Thread.sleep(2000);
         } catch (InterruptedException ex) {
             System.out.println("Fallo en el delay de la cola de terminados");
         }
