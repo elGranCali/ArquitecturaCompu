@@ -22,19 +22,19 @@ public class Nucleo extends Thread {
     int bloquesEnCache = 8; 
     int [][] cacheInstrucciones = new int[8][17];
     boolean esFin = false;
-    private Lock lockFin;
+    private final Lock lockOcupado;
     public static int QUAMTUM = 20;
     public static int m = 2;
     public static int b = 2;
-    private ConcurrentLinkedQueue<Contexto> cola;
-    private ConcurrentLinkedQueue<Contexto> coladeTerminados;
+    private final ConcurrentLinkedQueue<Contexto> cola;
+    private final ConcurrentLinkedQueue<Contexto> coladeTerminados;
     
     public Nucleo(CyclicBarrier lock, String id, Lock lockFin, ConcurrentLinkedQueue<Contexto> cola, ConcurrentLinkedQueue<Contexto> coladeTerminados){
         contexto = null;
         this.cola = cola;
         this.coladeTerminados = coladeTerminados;
         this.barreraLock = lock;
-        this.lockFin = lockFin;
+        this.lockOcupado = lockFin;
         this.id = id;
         ocupado = false;
         // inicializacion de la cache en -1's
@@ -62,7 +62,12 @@ public class Nucleo extends Thread {
     
     public void setContexto(Contexto contexto) {
         this.contexto = contexto;
-        ocupado = true;
+        lockOcupado.lock();
+        try {
+            ocupado = true;
+        } finally {
+            lockOcupado.unlock();
+        }
     }
     
    
@@ -71,7 +76,7 @@ public class Nucleo extends Thread {
         try {
             barreraLock.await();
         } catch (BrokenBarrierException ex) {
-            System.out.println("Se reseteo la barrera");;
+            System.out.println("Se reseteo la barrera");
         }
     }
     
@@ -97,9 +102,9 @@ public class Nucleo extends Thread {
         boolean agregarATerminados = false;
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
-        System.out.println("EL QUAMTUM ES: " + q);
+        //System.out.println("EL QUAMTUM ES: " + q);
         while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
-            System.out.println("El PC actual es: "+contexto.PC);       
+            System.out.println("El PC actual del nucleo " + id.toUpperCase() + " es: "+contexto.PC);       
             int numBloque = contexto.PC/16; // Bloque en memoria
             System.out.println("Buscando numero de bloque: "+numBloque);  
             int numPalabra = contexto.PC%16;
@@ -113,12 +118,14 @@ public class Nucleo extends Thread {
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                 }else {
                     q--;                        // Disminuimos Quatum 
-                    lockFin.lock();
+                    //lockFin.lock();
                     try {
                         esFin = Decodificador.esFin(hilillo);
                         if (esFin){
                             agregarATerminados = true;
                             HiloMaestro.terminarHilo(); 
+                            System.out.println("El nucleo "+ id + " agrega el contexto del hilillo " + contexto.id +" a la cola de terminados");
+                            coladeTerminados.add(contexto);
                             try {
                                 avanzarReloj();
                             } catch (InterruptedException ex) {
@@ -127,7 +134,7 @@ public class Nucleo extends Thread {
                             break;
                         }
                     } finally {
-                        lockFin.unlock();
+                       // lockOcupado.unlock();
                     }
                     // Avanzar reloj 
                     try {
@@ -173,17 +180,13 @@ public class Nucleo extends Thread {
                     // Al salir de aquí ya cargó el bloque a cache
                 }
             }
-        }//final de while
-        System.out.println("Termina de procesar quantum. El contexto guardado es: PC = "+contexto.PC);  
-        ocupado= false;
+        }//final de whileç
+        System.out.println("El nucleo "+ id+ " termina de procesar quantum. El contexto guardado es: PC = "+contexto.PC);  
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo  
-        if (agregarATerminados) {
-            System.out.println("Se agrega contexto a la cola de terminados");
-            coladeTerminados.add(contexto);
-        } else {
-            System.out.println("Se agrega contexto a la cola");
-            cola.add(contexto); // Guardamos el contexto     
-        }
+        if (!agregarATerminados) {
+            System.out.println("El nucleo "+ id + " agrega el contexto del hilillo " + contexto.id +" a la cola");
+            cola.add(contexto); // Guardamos el contexto
+        } 
         contexto = null; // Retiramos el contexto del nuecleo
     }
     
@@ -203,6 +206,12 @@ public class Nucleo extends Thread {
             }  
             System.out.println("Núcleo " + id + " iniciando el quantum");
             procesarQuantum(); // Se procesa un quantum 
+            lockOcupado.lock();
+            try {
+                ocupado = false; 
+            } finally {
+                lockOcupado.unlock();
+            }
             System.out.println("Núcleo " + id + " terminado quantum");  
         }
         System.out.println("TERMINO EL NUCLEO " +id);

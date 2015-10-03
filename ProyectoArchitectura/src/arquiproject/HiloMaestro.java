@@ -8,6 +8,7 @@ package arquiproject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 import java.util.concurrent.CyclicBarrier;
@@ -30,8 +31,8 @@ public class HiloMaestro {
     int quantumCiclos;
     int memoriaCiclos;
     int busCiclos; 
-    private final Lock lockFin1 = new ReentrantLock();
-    private final Lock lockFin2 = new ReentrantLock();
+    private final Lock lockOcupado1 = new ReentrantLock();
+    private final Lock lockOcupado2 = new ReentrantLock();
     private int inicioHilo = 0;
     private final static Semaphore busInstrucciones = new Semaphore(1);
     Nucleo n1;
@@ -50,6 +51,7 @@ public class HiloMaestro {
    }
     
     public static synchronized boolean hayTrabajo(){
+        System.out.println("Hilos a procesar son: "+ hilosAprocesar);
         return !(hilosAprocesar==0);
     }
    
@@ -60,25 +62,25 @@ public class HiloMaestro {
     public boolean nucleoVacio(Nucleo n) {
         
         if (n.id.equals("uno") ){
-            lockFin1.lock();
+            lockOcupado1.lock();
             try {
-                if (n.esFin == true || n.ocupado == false) {
-                    n.esFin = false;
+                if (n.ocupado == false) {
+                    //n.esFin = false;
                     return true;
                 }
             } finally {
-                lockFin1.unlock();
+                lockOcupado1.unlock();
             }
             return false; 
         } else {
-            lockFin2.lock();
+            lockOcupado2.lock();
             try {
-                if (n.esFin == true || n.ocupado == false) {
-                    n.esFin = false;
+                if (n.ocupado == false) {
+                    //n.esFin = false;
                     return true;
                 }
             } finally {
-                lockFin2.unlock();
+                lockOcupado2.unlock();
             }
             return false;
         } 
@@ -157,9 +159,9 @@ public class HiloMaestro {
             BufferedReader  reader = new BufferedReader(filereader);
             
             while((line = reader.readLine()) != null) {
-                String [] single = line.split(" ");
-                for (String single1 : single) {
-                    int number = Integer.parseInt(single1);
+                String [] instrucciones = line.split(" ");
+                for (String instruccion : instrucciones) {
+                    int number = Integer.parseInt(instruccion);
                     memoriaInstrucciones[totalInstrucciones] = number;
                     totalInstrucciones++; 
                 }
@@ -167,7 +169,7 @@ public class HiloMaestro {
             }
             System.out.println("Archivo "+filename+" procesado.");
             System.out.println("Contexto agregado");
-        }catch (Exception e) {
+        }catch (IOException | NumberFormatException e) {
             System.out.println("Error al leer archivo");
         }
         hilosAprocesar++;
@@ -205,8 +207,8 @@ public class HiloMaestro {
     
      public HiloMaestro() {
         ciclo = 1;
-        n1 = new Nucleo(lock, "uno", lockFin1, cola, colaDeTerminados);
-        n2 = new Nucleo(lock, "dos", lockFin2, cola, colaDeTerminados); 
+        n1 = new Nucleo(lock, "uno", lockOcupado1, cola, colaDeTerminados);
+        n2 = new Nucleo(lock, "dos", lockOcupado2, cola, colaDeTerminados); 
         System.out.println("Se crean los 2 nucleos");      
     }
 } // Final de clase

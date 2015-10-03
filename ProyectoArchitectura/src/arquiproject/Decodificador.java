@@ -41,23 +41,23 @@ public class Decodificador {
         switch(codOp){
             case "8":
                 contexto.registros[r2] = contexto.registros[r1]+r3;
-                System.out.print(contexto.registros[r2]);
+                //System.out.print(contexto.registros[r2]);
                 break;
             case "32":
                 contexto.registros[r3]= contexto.registros[r1]+contexto.registros[r2];
-                System.out.print(contexto.registros[r3]);
+                //System.out.print(contexto.registros[r3]);
                 break;
             case "34":
                 contexto.registros[r3]=contexto.registros[r1]-contexto.registros[r2];
-                System.out.print(contexto.registros[r3]);
+                //System.out.print(contexto.registros[r3]);
                 break;
             case "12":
                 contexto.registros[r3]=contexto.registros[r1]*contexto.registros[r2];
-                System.out.print(contexto.registros[r3]);
+                //System.out.print(contexto.registros[r3]);
                 break;
             case "14":
                 contexto.registros[r3]=contexto.registros[r1]/contexto.registros[r2];
-                System.out.print(contexto.registros[r3]);
+                //System.out.print(contexto.registros[r3]);
                 break;
             /*case "35":
                 registros[r2]= M*(r3+registros[r1]);
@@ -76,11 +76,11 @@ public class Decodificador {
             case "3":
                 contexto.registros[31] = contexto.PC;
                 contexto.PC += r3;
-                System.out.print("PC="+contexto.PC+" R31="+contexto.registros[31]);
+                //System.out.print("PC="+contexto.PC+" R31="+contexto.registros[31]);
                 break;
             case "2":
                 contexto.PC = contexto.registros[r1];
-                System.out.print("PC="+contexto.PC);
+                //System.out.print("PC="+contexto.PC);
                 break;
             /*case "11":
                 registros[r2] = M*(r3+registros[r1]);
@@ -94,8 +94,6 @@ public class Decodificador {
                 }
                 break;*/
             case "63":
-                System.out.println("Ya termino el hilo");
-                //System.exit(0);
                 break;
             default:
                 break;
