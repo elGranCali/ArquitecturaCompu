@@ -13,9 +13,11 @@ public class Contexto {
     
     public int PC;
     public int[] registros = new int[33];
+    public String id;
     
-    public Contexto(int pc){
+    public Contexto(int pc, int name){
         this.PC = pc;
+        this.id = "HILILLO " + name;
         for(int i = 0; i<33; i++){
             registros[i]=0;
         }
@@ -23,7 +25,7 @@ public class Contexto {
     
     @Override
     public String toString(){
-        String respuesta = "****************************************************";
+        String respuesta = "\n***********HILO" + id + "*****************************************";
         respuesta += "\nValor del PC: " + PC + "\n Valor de registros: ";
         for (int i = 0 ; i< 33; i++ ) {
             respuesta += "\n[R-" + i +"] = " + registros[i];

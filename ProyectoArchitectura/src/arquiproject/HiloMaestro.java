@@ -105,7 +105,7 @@ public class HiloMaestro {
         asignarContexto(n2);
         iniciarHilos(); 
         while(true) {
-            System.out.println("Hay Trabajo"); 
+            System.out.println("Avance hilo maestro"); 
             try {
                 if (nucleoVacio(n1)) {
                     asignarContexto(n1);      
@@ -114,7 +114,7 @@ public class HiloMaestro {
                     asignarContexto(n2);    
                 }
                 if (hayTrabajo()) {
-                    lock.await(1,TimeUnit.SECONDS);
+                    lock.await(3,TimeUnit.SECONDS);
                 } else {
                     if (lock.getNumberWaiting() != 0) {
                         lock.reset();
@@ -149,8 +149,8 @@ public class HiloMaestro {
     public String ReadFile(String filename){
         String line = null;
         inicioHilo = inicioHilo * 4; 
-        System.out.println("Inicio de hilo: "+inicioHilo); 
-        cola.add(new Contexto(inicioHilo));
+        System.out.println("Inicio de hilo: "+totalInstrucciones); 
+        cola.add(new Contexto(totalInstrucciones, hilosAprocesar+1));
         try {
             File myfile = new File(filename);
             FileReader filereader = new FileReader(myfile);

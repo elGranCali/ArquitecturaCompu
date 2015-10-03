@@ -77,13 +77,8 @@ public class Nucleo extends Thread {
     
     
     boolean estaEnCache(int numBloque){
-    // revisamos si existe la tag en la columna 16 de la matriz de cache igual a numBloque
-        for(int i=0; i < 8 ; i++) {  // Recorro el numero de bloques
-            if (cacheInstrucciones[i][16] == numBloque) {
-                return true;    
-            }       
-        }
-        return false; 
+        // revisamos si existe la tag en la columna 16 de la matriz de cache igual a numBloque        
+        return cacheInstrucciones[numBloque%8][16] == numBloque; 
     }
     
     String leerInstruccionDeCache(int numBloque, int numPalabra) {
@@ -105,13 +100,13 @@ public class Nucleo extends Thread {
         System.out.println("EL QUAMTUM ES: " + q);
         while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
             System.out.println("El PC actual es: "+contexto.PC);       
-            int numBloque = contexto.PC/16;
+            int numBloque = contexto.PC/16; // Bloque en memoria
             System.out.println("Buscando numero de bloque: "+numBloque);  
             int numPalabra = contexto.PC%16;
             
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Instruccion esta en cache"); 
-                String hilillo = leerInstruccionDeCache(numBloque, numPalabra);
+                String hilillo = leerInstruccionDeCache(numBloque%8, numPalabra);
                 Decodificador.decodificacion(hilillo, contexto);
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
@@ -198,7 +193,7 @@ public class Nucleo extends Thread {
         while (HiloMaestro.hayTrabajo()) {    // Seria hasta que ya no exista trabajo
             // Caso de que no tenga un contexto asignado el debe seguir corriendo  
             if (contexto == null) {
-                System.out.println("Hilos" + HiloMaestro.hilosAprocesar);
+                System.out.println("Nucleo " + id + " esta ocioso");
                 try {
                     avanzarReloj();
                 } catch (InterruptedException ex) {
