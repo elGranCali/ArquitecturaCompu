@@ -11,8 +11,6 @@ import java.io.FileReader;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 import java.util.concurrent.CyclicBarrier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.Semaphore;
@@ -160,8 +158,8 @@ public class HiloMaestro {
             
             while((line = reader.readLine()) != null) {
                 String [] single = line.split(" ");
-                for (int i=0; i < single.length; i++){
-                    int number = Integer.parseInt(single[i]);
+                for (String single1 : single) {
+                    int number = Integer.parseInt(single1);
                     memoriaInstrucciones[totalInstrucciones] = number;
                     totalInstrucciones++; 
                 }
@@ -202,7 +200,6 @@ public class HiloMaestro {
         Nucleo.QUAMTUM = q; 
         Nucleo.m = m;
         Nucleo.b = b; 
-        String r = "q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos; 
         System.out.println("q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos); 
     }
     

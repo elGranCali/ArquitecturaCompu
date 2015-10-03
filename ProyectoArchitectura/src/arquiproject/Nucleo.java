@@ -8,7 +8,6 @@ package arquiproject;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Lock;
-import java.util.logging.Level;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 
 /**
@@ -181,7 +180,6 @@ public class Nucleo extends Thread {
             }
         }//final de while
         System.out.println("Termina de procesar quantum. El contexto guardado es: PC = "+contexto.PC);  
-        q = QUAMTUM;
         ocupado= false;
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo  
         if (agregarATerminados) {

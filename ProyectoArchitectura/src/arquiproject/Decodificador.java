@@ -23,6 +23,7 @@ public class Decodificador {
         String registro1 = sepHilo[1];
         String registro2 = sepHilo[2];
         String registro3 = sepHilo[3];
+        contexto.PC += 4;
         /*
             registros[0] = R0
             registros[1] = R1
