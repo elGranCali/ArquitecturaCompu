@@ -125,9 +125,9 @@ public class HiloMaestro {
                 }
                 ciclo++;
             } catch (InterruptedException ex) {
-                Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Interrupcion");
             } catch (BrokenBarrierException ex) {
-                Logger.getLogger(HiloMaestro.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Se rompio la barrera");
             } catch (TimeoutException ex) {
                 System.out.println("Se acabo el tiempo");
             } 

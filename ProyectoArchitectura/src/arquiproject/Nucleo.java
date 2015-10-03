@@ -9,7 +9,6 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Lock;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 
 /**
@@ -130,7 +129,7 @@ public class Nucleo extends Thread {
                             try {
                                 avanzarReloj();
                             } catch (InterruptedException ex) {
-                                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                                System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
                             }
                             break;
                         }
@@ -141,7 +140,7 @@ public class Nucleo extends Thread {
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
-                        Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                        System.out.println("Falla al avanzar el reloj despues de ejecutar una instruccion");
                     }
                 }
             } else {    // Instruccion no esta en cache 
@@ -176,7 +175,7 @@ public class Nucleo extends Thread {
                         try {
                             avanzarReloj();
                         } catch (InterruptedException ex) {
-                            Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                            System.out.println("Error en el trayendo datos de memoria");
                         }
                     } 
                     // Al salir de aquí ya cargó el bloque a cache
@@ -207,7 +206,7 @@ public class Nucleo extends Thread {
                 try {
                     avanzarReloj();
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("Falla al avanzar el reloj cuando no hay contexto");
                 }              
                 continue;  // Salga de esta iteración hasta que exista un contexto
             }  
