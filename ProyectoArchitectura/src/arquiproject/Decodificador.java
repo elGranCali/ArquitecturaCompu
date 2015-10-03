@@ -16,9 +16,9 @@ public class Decodificador {
     static Contexto contexto;
     
     
-    public static void decodificacion(String instruccion , Contexto contextoRecibido){
-        contexto = contextoRecibido;
+    public static void decodificacion(String instruccion , Contexto contexto){
         int posEspacio = instruccion.indexOf(" ");
+        contexto.PC += 4;
         String codOp = instruccion.substring(0, posEspacio);
         instruccion = instruccion.substring(posEspacio+1, instruccion.length());
         posEspacio = instruccion.indexOf(" ");

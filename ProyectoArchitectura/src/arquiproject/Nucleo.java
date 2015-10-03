@@ -119,7 +119,6 @@ public class Nucleo extends Thread {
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                 }else {
                     q--;                        // Disminuimos Quatum 
-                    contexto.PC += 4;                  // Aumentamos pc 
                     lockFin.lock();
                     try {
                         esFin = Decodificador.esFin(hilillo);
