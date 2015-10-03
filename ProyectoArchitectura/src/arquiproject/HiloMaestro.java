@@ -150,6 +150,7 @@ public class HiloMaestro {
     */
     public String ReadFile(String filename){
         String line = null;
+        inicioHilo = inicioHilo * 4; 
         System.out.println("Inicio de hilo: "+inicioHilo); 
         cola.add(new Contexto(inicioHilo));
         try {

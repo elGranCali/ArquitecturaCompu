@@ -157,16 +157,15 @@ public class Nucleo extends Thread {
                         System.out.println("AVANCEEEE EN NUCLEO" + id);;
                     }
                 } else {
-                    System.out.println("Bus esta libre, party hard en memoria");
                     // traer de memoria las 4 palabras del bloque 
-                    System.out.println("Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
+                    System.out.println("Bus libre. Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
                     for (int j=0; j<4; j++) {  // 4 palabras
                         for (int i=0; i<4; i++) {  // 4 campitos de 1 palabra
                             cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria((nuevoNumBloque*16)+4*j+i);
                         }
                     }
-                    imprimirCache();
-                    HiloMaestro.imprimirMemoria();
+                    //imprimirCache();
+                    //HiloMaestro.imprimirMemoria();
                     HiloMaestro.releaseAccess();
                     // mientras que la cantidad de ciclos nueva no termine 
                     while (c != 0){

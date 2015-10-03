@@ -24,9 +24,9 @@ public class Contexto {
     @Override
     public String toString(){
         String respuesta = "****************************************************";
-        respuesta += "\nEl valor del PC es " + PC + " y los registros son: ";
+        respuesta += "\nValor del PC: " + PC + "\n Valor de registros: ";
         for (int i = 0 ; i< 33; i++ ) {
-            respuesta += "\nRegistro " + i +": " + registros[i];
+            respuesta += "\n[R-" + i +"] = " + registros[i];
         }
         respuesta += "\n****************************************************";
         return respuesta;

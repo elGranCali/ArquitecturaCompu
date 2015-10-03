@@ -17,17 +17,12 @@ public class Decodificador {
     
     
     public static void decodificacion(String instruccion , Contexto contexto){
-        int posEspacio = instruccion.indexOf(" ");
-        contexto.PC += 4;
-        String codOp = instruccion.substring(0, posEspacio);
-        instruccion = instruccion.substring(posEspacio+1, instruccion.length());
-        posEspacio = instruccion.indexOf(" ");
-        String registro1 = instruccion.substring(0, posEspacio);
-        instruccion = instruccion.substring(posEspacio+1, instruccion.length());
-        posEspacio = instruccion.indexOf(" ");
-        String registro2 = instruccion.substring(0, posEspacio);
-        instruccion = instruccion.substring(posEspacio+1, instruccion.length());
-        String registro3 = instruccion;
+
+        String [] sepHilo = instruccion.split(" "); 
+        String codOp = sepHilo[0];
+        String registro1 = sepHilo[1];
+        String registro2 = sepHilo[2];
+        String registro3 = sepHilo[3];
         /*
             registros[0] = R0
             registros[1] = R1
