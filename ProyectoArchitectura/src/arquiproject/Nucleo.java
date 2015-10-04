@@ -98,21 +98,22 @@ public class Nucleo extends Thread {
     
     public void procesarQuantum () {
         int tiempoTrayendoBloque = 4*(b+m+b);
-        System.out.println("El tiempo trayendo bloque para esta simulacion es: "+tiempoTrayendoBloque);        
+        //System.out.println("El tiempo trayendo bloque para esta simulacion es: "+tiempoTrayendoBloque);        
         boolean agregarATerminados = false;
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         //System.out.println("EL QUAMTUM ES: " + q);
         while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
-            System.out.println("El PC actual del nucleo " + id.toUpperCase() + " es: "+contexto.PC);       
+            System.out.println("El PC actual del nucleo " + id.toUpperCase() + " con el "+ contexto.id+ " es: "+contexto.PC);       
             int numBloque = contexto.PC/16; // Bloque en memoria
-            System.out.println("Buscando numero de bloque: "+numBloque);  
+            //System.out.println("Buscando numero de bloque: "+numBloque);  
             int numPalabra = contexto.PC%16;
             
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
-                System.out.println("Instruccion esta en cache"); 
+                //System.out.println("Instruccion esta en cache"); 
                 String hilillo = leerInstruccionDeCache(numBloque%8, numPalabra);
                 Decodificador.decodificacion(hilillo, contexto);
+                System.out.println("Instruccion "+ hilillo +" del nucleo " + id.toUpperCase() + " con el " + contexto.id);
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
@@ -162,7 +163,7 @@ public class Nucleo extends Thread {
                     System.out.println("Bus libre. Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
                     for (int j=0; j<4; j++) {  // 4 palabras
                         for (int i=0; i<4; i++) {  // 4 campitos de 1 palabra
-                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria((nuevoNumBloque*16)+4*j+i);
+                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria((numBloque*16)+4*j+i);
                         }
                     }
                     //imprimirCache();
