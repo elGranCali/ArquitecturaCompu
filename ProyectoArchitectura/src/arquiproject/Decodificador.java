@@ -18,9 +18,9 @@ public class Decodificador {
     
     public static void decodificacion(String instruccion , Contexto contexto){
         
-        if (instruccion.equals("8 0 1 1")){
+        /*if (instruccion.equals("8 0 1 1")){
             System.out.println("eeeeeeeeeeeeeentro");
-        }
+        }*/
         String [] sepHilo = instruccion.split(" "); 
         String codOp = sepHilo[0];
         String registro1 = sepHilo[1];

@@ -47,7 +47,7 @@ public class Nucleo extends Thread {
     }
     
      public void imprimirCache() {
-        String cajita = "";
+        String cajita = "Cache de Nucleo "+ id +"\n";
         for (int i=0; i < 8; i++){
             for (int j=0; j < 17; j++) {
                  cajita += "["+cacheInstrucciones[i][j]+"] , ";
@@ -83,7 +83,22 @@ public class Nucleo extends Thread {
     
     boolean estaEnCache(int numBloque){
         // revisamos si existe la tag en la columna 16 de la matriz de cache igual a numBloque        
-        return cacheInstrucciones[numBloque%8][16] == numBloque; 
+        boolean result = false; 
+        for (int i=0; i<8; i++) {
+            if (cacheInstrucciones[i][16] == numBloque) {
+                result = true; 
+            } 
+        }
+        return result; 
+    }
+    
+    void imprimirTags() {
+        String cajita = "Tags Cache nucleo: " +id+":\n";
+        for (int i=0; i<8; i++) {
+            cajita += "[" + cacheInstrucciones[i][16] + "],";  
+        }
+         System.out.println(cajita);
+        
     }
     
     String leerInstruccionDeCache(int numBloque, int numPalabra) {
@@ -97,21 +112,22 @@ public class Nucleo extends Thread {
     }
     
     public void procesarQuantum () {
-        int tiempoTrayendoBloque = 4*(b+m+b);
-        //System.out.println("El tiempo trayendo bloque para esta simulacion es: "+tiempoTrayendoBloque);        
+        int tiempoTrayendoBloque = 4*(b+m+b);     
         boolean agregarATerminados = false;
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
-        //System.out.println("EL QUAMTUM ES: " + q);
+        
         while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
             System.out.println("El PC actual del nucleo " + id.toUpperCase() + " con el "+ contexto.id+ " es: "+contexto.PC);       
-            int numBloque = contexto.PC/16; // Bloque en memoria
-            //System.out.println("Buscando numero de bloque: "+numBloque);  
-            int numPalabra = contexto.PC%16;
             
+            int numBloque = contexto.PC/16; // Bloque en memoria
+            int numPalabra = contexto.PC%16; // busca palabra
+            int nuevoNumBloque = numBloque%bloquesEnCache;  // averiguar donde colocar bloque
+            imprimirTags();
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
-                //System.out.println("Instruccion esta en cache"); 
-                String hilillo = leerInstruccionDeCache(numBloque%8, numPalabra);
+                System.out.println("Nucleo: " + id + " Bloque "+ numBloque + " esta en cache"); 
+                System.out.println("Buscando en cache el nuevo bloque: " + nuevoNumBloque + " Palabra "+ numPalabra); 
+                String hilillo = leerInstruccionDeCache(nuevoNumBloque, numPalabra);
                 Decodificador.decodificacion(hilillo, contexto);
                 System.out.println("Instruccion "+ hilillo +" del nucleo " + id.toUpperCase() + " con el " + contexto.id);
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
@@ -145,29 +161,29 @@ public class Nucleo extends Thread {
                     }
                 }
             } else {    // Instruccion no esta en cache 
-                // ponemos en cache la tag del numero de bloque
-                int nuevoNumBloque = numBloque%bloquesEnCache;  // averiguar donde colocar bloque
-                System.out.println("Colocando el bloque: "+ numBloque + "en el bloque de cache: "+nuevoNumBloque);  
-                cacheInstrucciones[nuevoNumBloque][16] = numBloque;
+               
+                System.out.println("Nucleo: "+ id + ". Trayendo de memoria: "+ numBloque + " en el bloque de cache: "+nuevoNumBloque);  
+                 // ponemos en cache la tag del numero de bloque
+                
                 int c = tiempoTrayendoBloque; 
                 if (!HiloMaestro.attemptAccess()) {
-                    System.out.println("Bus esta ocupado, buu");
+                    System.out.println("Nucleo: "+ id + ", Bus esta ocupado.");
                     // Avanzar reloj hasta que bus esté desocupado
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
-                        System.out.println("AVANCEEEE EN NUCLEO" + id);;
+                        System.out.println("AVANCE EN NUCLEO" + id);;
                     }
                 } else {
                     // traer de memoria las 4 palabras del bloque 
-                    System.out.println("Bus libre. Trayendo de memoria todo el bloque: "+nuevoNumBloque);  
-                    for (int j=0; j<4; j++) {  // 4 palabras
+                   for (int j=0; j<4; j++) {  // 4 palabras
                         for (int i=0; i<4; i++) {  // 4 campitos de 1 palabra
-                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria((numBloque*16)+4*j+i);
+                            cacheInstrucciones[nuevoNumBloque][j*4+i]= HiloMaestro.leerMemoria((numBloque*16)+((4*j)+i));
                         }
                     }
-                    //imprimirCache();
-                    //HiloMaestro.imprimirMemoria();
+                    cacheInstrucciones[nuevoNumBloque][16] = numBloque;
+                    imprimirCache();
+                    HiloMaestro.imprimirMemoria();
                     HiloMaestro.releaseAccess();
                     // mientras que la cantidad de ciclos nueva no termine 
                     while (c != 0){

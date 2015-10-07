@@ -28,7 +28,10 @@ public class Contexto {
         String respuesta = "\n***********HILO" + id + "*****************************************";
         respuesta += "\nValor del PC: " + PC + "\n Valor de registros: ";
         for (int i = 0 ; i< 33; i++ ) {
-            respuesta += "\n[R-" + i +"] = " + registros[i];
+            respuesta += "[R-" + i +"] = " + registros[i] + "\t\t";
+            if (i%2 == 0) {
+                respuesta += "\n";
+            }
         }
         respuesta += "\n****************************************************";
         return respuesta;

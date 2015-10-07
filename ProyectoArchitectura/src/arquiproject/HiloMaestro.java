@@ -183,7 +183,7 @@ public class HiloMaestro {
     }
     
     public static void imprimirMemoria() {
-        String cajita = "";
+        String cajita = "Memoria:\n";
         for (int i=0; i < cantidadMemInstrucciones; i++){
             cajita += "["+memoriaInstrucciones[i]+"] , ";   
         }
