@@ -167,7 +167,7 @@ public class HiloMaestro {
                 }
                 inicioHilo++;                
             }
-            System.out.println("Archivo "+filename+" procesado.");
+            System.out.println("Archivo "+myfile.getName()+" procesado.");
             System.out.println("Contexto agregado");
         }catch (IOException | NumberFormatException e) {
             System.out.println("Error al leer archivo");
