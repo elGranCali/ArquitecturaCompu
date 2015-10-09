@@ -73,6 +73,12 @@ public class Nucleo extends Thread {
    
     // Este método puede ser llamado en cualquier momento que se termine un ciclo
     private void avanzarReloj() throws InterruptedException{
+        if(HiloMaestro.stepByStep){
+            if(this.contexto != null){
+                HiloMaestro.textArea.append(this.contexto.toString());
+                //Thread.sleep(3000);
+            }
+        }
         try {
             barreraLock.await();
         } catch (BrokenBarrierException ex) {

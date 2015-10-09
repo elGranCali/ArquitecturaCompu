@@ -39,6 +39,8 @@ public class HiloMaestro {
     Nucleo n2; 
     private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<>();
     public static final ConcurrentLinkedQueue<Contexto> colaDeTerminados = new ConcurrentLinkedQueue<>();
+    public static boolean stepByStep = false;
+    public static javax.swing.JTextArea textArea;
     
     
    public static boolean attemptAccess() {
@@ -193,6 +195,14 @@ public class HiloMaestro {
     public static int leerMemoria(int posicion) {
         int valor = memoriaInstrucciones[posicion];
         return valor; 
+    }
+    
+    public void setStepByStep(boolean step){
+        stepByStep = step;
+    }
+    
+    public void setTextField(javax.swing.JTextArea jTextArea1){
+        this.textArea = jTextArea1;
     }
     
     public void setParametrosCiclos(int q, int m, int b) {
