@@ -35,6 +35,7 @@ public class HiloMaestro {
     private final Lock lockOcupado2 = new ReentrantLock();
     private int inicioHilo = 0;
     private final static Semaphore busInstrucciones = new Semaphore(1);
+    private final static Semaphore busDatos = new Semaphore(1);
     Nucleo n1;
     Nucleo n2; 
     private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<>();
@@ -52,6 +53,15 @@ public class HiloMaestro {
        return true;
    }
     
+   public static boolean pedirBusDatos() {
+       return busDatos.tryAcquire();
+   }
+   
+   public static boolean soltarBusDatos() {
+       busDatos.release();
+       return true;
+   }
+   
     public static synchronized boolean hayTrabajo(){
         System.out.println("Hilos a procesar son: "+ hilosAprocesar);
         return !(hilosAprocesar==0);

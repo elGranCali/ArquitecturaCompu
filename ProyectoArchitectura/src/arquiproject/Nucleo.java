@@ -139,6 +139,14 @@ public class Nucleo extends Thread {
                 if (!completadoEnEsteCiclo) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
+                    
+                    // Se pide la cache
+                    // Si es cache hit 
+                    // Si no es cache hit
+                    while (HiloMaestro.pedirBusDatos()){
+                        
+                    }
+                
                 }else {
                     q--;                        // Disminuimos Quatum 
                     //lockFin.lock();
