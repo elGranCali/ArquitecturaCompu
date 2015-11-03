@@ -140,13 +140,38 @@ public class Nucleo extends Thread {
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                     
-                    // Se pide la cache
-                    // Si es cache hit 
-                    // Si no es cache hit
-                    while (HiloMaestro.pedirBusDatos()){
-                        
+                    // CASO DEL LW
+                    boolean instruccionCompleta = false;
+                    while (!instruccionCompleta){
+                        //tomar la cache propia
+                        boolean cacheHit = true; // Solo para que compile
+                        if(cacheHit){
+                            // Copie el dato en el registro
+                        } else {
+                            boolean bloqueActualModificado = false;
+                            if (bloqueActualModificado){
+                                if(HiloMaestro.pedirBusDatos()){
+                                    //Escriba los datos modificados para dar campo a los nuevos
+                                } else {
+                                    //LIBERAR CACHE
+                                    continue;
+                                } 
+                            } else {
+                                boolean pedirOtraCache = false;
+                                if(HiloMaestro.pedirBusDatos() && pedirOtraCache){
+                                    boolean cacheHitEnLaOtraCache = false;
+                                    if (cacheHitEnLaOtraCache){
+                                        // Copie desde la otra cache
+                                    } else {
+                                        //Copie desde memoria
+                                    }
+                                } else {
+                                    //LIBERAR CACHE
+                                    continue;
+                                }
+                            }
+                        }
                     }
-                
                 }else {
                     q--;                        // Disminuimos Quatum 
                     //lockFin.lock();
