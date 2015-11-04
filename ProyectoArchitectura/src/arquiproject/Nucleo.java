@@ -22,7 +22,7 @@ public class Nucleo extends Thread {
     public Contexto contexto;
     int bloquesEnCache = 8; 
     int [][] cacheInstrucciones = new int[8][17];
-    int [][] cacheDatos = new int[8][6];
+    int [][] cacheDatos = new int[8][6]; // COLUMNA 4 sera numBloque  y 5 estado -1: invalido 0: compartido 1: modificado 
     boolean esFin = false;
     private final Lock lockOcupado;
     private final static Semaphore lockCache = new Semaphore(1);
@@ -31,7 +31,8 @@ public class Nucleo extends Thread {
     public static int b = 2;
     private final ConcurrentLinkedQueue<Contexto> cola;
     private final ConcurrentLinkedQueue<Contexto> coladeTerminados;
-    
+    public static boolean cacheDatosEnUso = false; 
+		
     public Nucleo(CyclicBarrier lock, String id, Lock lockFin, ConcurrentLinkedQueue<Contexto> cola, ConcurrentLinkedQueue<Contexto> coladeTerminados){
         contexto = null;
         this.cola = cola;
@@ -44,6 +45,11 @@ public class Nucleo extends Thread {
         for (int i=0; i < 8; i++){
             for (int j=0; j < 17; j++) {
                 cacheInstrucciones[i][j] = -1;
+            }
+        }
+		for (int i=0; i < 8; i++){
+            for (int j=0; j < 6; j++) {
+                cacheDatos[i][j] = -1;
             }
         }
         
@@ -63,6 +69,16 @@ public class Nucleo extends Thread {
         for (int i=0; i < 8; i++){
             for (int j=0; j < 17; j++) {
                  cajita += "["+cacheInstrucciones[i][j]+"] , ";
+            }
+        }
+        System.out.println(cajita);
+    }
+	
+	public void imprimirCacheDatos() {
+        String cajita = "Cache de Nucleo "+ id +"\n";
+        for (int i=0; i < 8; i++){
+            for (int j=0; j < 6; j++) {
+                 cajita += "["+cacheDatos[i][j]+"] , ";
             }
         }
         System.out.println(cajita);
@@ -109,11 +125,29 @@ public class Nucleo extends Thread {
         }
         return result; 
     }
+	
+    boolean estaEnCacheDatos(int numBloque){
+        // revisamos si existe la tag en la columna 4 de la matriz de cache igual a numBloque        
+        boolean result = false; 
+        for (int i=0; i<8; i++) {
+            if (cacheDatos[i][4] == numBloque) {
+                result = true; 
+            } 
+        }
+        return result; 
+    }
     
     void imprimirTags() {
         String cajita = "Tags Cache nucleo: " +id+":\n";
         for (int i=0; i<8; i++) {
             cajita += "[" + cacheInstrucciones[i][16] + "],";  
+        }
+         System.out.println(cajita);
+    }
+	void imprimirTagsDatos() {
+        String cajita = "Tags Cache nucleo: " +id+":\n";
+        for (int i=0; i<8; i++) {
+            cajita += "[" + cacheDatos[i][4] + "],";  
         }
          System.out.println(cajita);
         
@@ -128,7 +162,38 @@ public class Nucleo extends Thread {
         hilillo = op+" "+reg1+" "+reg2+" "+result; 
         return hilillo;
     }
+	
+	/*
+		int leerDatosDeCache(int numBloque, int numPalabra) {
+			int dato = cacheDatos[numBloque][numPalabra];
+			return dato;
+		}
+	*/
+	
+	 int procesarDireccion(String hilillo) {
+        int direccionDato = 0;
+        String [] pedazos = hilillo.split(" ");
+        String direccion = pedazos[2];
+        String[] offset = direccion.split("()");
+        System.out.println("n:"+offset[0]+" r:"+offset[1]);
+        
+        int n = Integer.parseInt(offset[0]);
+        int r = Integer.parseInt(offset[1]);
+        
+        direccionDato = contexto.registros[r] + n;
+        
+        return direccionDato;
+    }
+	
+	public boolean cacheDatosLibre() {
+        if (cacheDatosEnUso){
+            return true;
+        } else {
+            return false;
+        }
+    }
     
+	
     public void procesarQuantum () {
         int tiempoTrayendoBloque = 4*(b+m+b);     
         boolean agregarATerminados = false;
@@ -141,7 +206,7 @@ public class Nucleo extends Thread {
             int numBloque = contexto.PC/16; // Bloque en memoria
             int numPalabra = contexto.PC%16; // busca palabra
             int nuevoNumBloque = numBloque%bloquesEnCache;  // averiguar donde colocar bloque
-            imprimirTags();
+            //imprimirTags();
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Nucleo: " + id + " Bloque "+ numBloque + " esta en cache"); 
                 System.out.println("Buscando en cache el nuevo bloque: " + nuevoNumBloque + " Palabra "+ numPalabra); 
@@ -149,6 +214,11 @@ public class Nucleo extends Thread {
                 Decodificador.decodificacion(hilillo, contexto);
                 System.out.println("Instruccion "+ hilillo +" del nucleo " + id.toUpperCase() + " con el " + contexto.id);
                 if (Decodificador.instruccionMemoria(hilillo)) {   // 2da Entrega
+                    int direccionDato = procesarDireccion(hilillo);
+                    int numBloqueDato = direccionDato/4; // Bloque en memoria de datos creo q aqui se le deben sumar 640
+                    int numPalabraDato = direccionDato%4; // busca palabra
+                    int nuevoNumBloqueDato = numBloque%bloquesEnCache;  // averiguar donde colocar bloque
+                    
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                     
@@ -156,7 +226,8 @@ public class Nucleo extends Thread {
                     boolean instruccionCompleta = false;
                     while (!instruccionCompleta){
                         //tomar la cache propia
-                        if(cacheHit(3)){
+                        cacheDatosEnUso = true;
+                        if(cacheHit(numBloqueDato)){
                             // Copie el dato en el registro
                         } else {
                             boolean bloqueActualModificado = false;
@@ -165,19 +236,30 @@ public class Nucleo extends Thread {
                                     //Escriba los datos modificados para dar campo a los nuevos
                                 } else {
                                     //LIBERAR CACHE
+                                    cacheDatosEnUso = false;
                                     continue;
                                 } 
-                            } else {
-                                boolean pedirOtraCache = false;
+                            } else {		
+                                boolean pedirOtraCache = HiloMaestro.puedoInvalidarCache(id);
+                                //boolean pedirOtraCache = false; 
                                 if(HiloMaestro.pedirBusDatos() && pedirOtraCache){
+                                    // hacr metodo en HM de pregunar por el bloque en otra cache y cambiarlo por el false 
                                     boolean cacheHitEnLaOtraCache = false;
                                     if (cacheHitEnLaOtraCache){
                                         // Copie desde la otra cache
                                     } else {
                                         //Copie desde memoria
                                     }
+                                    // liberar cache vecina
                                 } else {
                                     //LIBERAR CACHE
+                                    cacheDatosEnUso = false; // liberar mi cache
+                                    // y avanzar reloj
+                                    try {
+                                            avanzarReloj();
+                                    } catch (InterruptedException ex) {
+                                            System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
+                                    }
                                     continue;
                                 }
                             }

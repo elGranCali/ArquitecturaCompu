@@ -25,7 +25,9 @@ public class HiloMaestro {
     static int totalInstrucciones = 0;
     public static int hilosAprocesar = 0;
     static int cantidadMemInstrucciones = 640; 
+	static int cantidadMemDatos = 1408;
     static int [] memoriaInstrucciones = new int[640];
+	static int [] memoriaDatos = new int [1408];
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     int quantumCiclos;
@@ -36,8 +38,12 @@ public class HiloMaestro {
     private int inicioHilo = 0;
     private final static Semaphore busInstrucciones = new Semaphore(1);
     private final static Semaphore busDatos = new Semaphore(1);
-    Nucleo n1;
+    static Nucleo n1;
+    static Nucleo n2; 
+	/*
+	Nucleo n1;
     Nucleo n2; 
+	*/
     private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<>();
     public static final ConcurrentLinkedQueue<Contexto> colaDeTerminados = new ConcurrentLinkedQueue<>();
     public static boolean stepByStep = false;
@@ -194,6 +200,12 @@ public class HiloMaestro {
         }
     }
     
+	 public static void initMemoriaDatos() {
+        for (int i=0; i < cantidadMemDatos; i++) {
+            memoriaDatos[i] = -1;
+        }
+    }
+	
     public static void imprimirMemoria() {
         String cajita = "Memoria:\n";
         for (int i=0; i < cantidadMemInstrucciones; i++){
@@ -201,10 +213,23 @@ public class HiloMaestro {
         }
         System.out.println(cajita);
     }
+	
+	public static void imprimirMemDatos() {
+        String cajita = "Memoria Datos:\n";
+        for (int i=0; i < cantidadMemDatos; i++){
+            cajita += "["+memoriaDatos[i]+"] , ";   
+        }
+        System.out.println(cajita);
+    }
     
     public static int leerMemoria(int posicion) {
         int valor = memoriaInstrucciones[posicion];
         return valor; 
+    }
+	
+	public static int leerMemoriaDatos(int posicion) {
+        int valor = memoriaDatos[posicion];
+        return valor;
     }
     
     public void setStepByStep(boolean step){
@@ -225,6 +250,18 @@ public class HiloMaestro {
         System.out.println("q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos); 
     }
     
+    public static boolean puedoInvalidarCache(String idNucleo) {
+        
+        // seria mejor invalidarla de una vez.     
+        boolean libre = false;
+        if( idNucleo.equalsIgnoreCase("uno")){
+            libre = n1.cacheDatosLibre();
+        }else{
+            libre = n2.cacheDatosLibre();
+        }
+        return libre;
+    }
+	
      public HiloMaestro() {
         ciclo = 1;
         n1 = new Nucleo(lock, "uno", lockOcupado1, cola, colaDeTerminados);

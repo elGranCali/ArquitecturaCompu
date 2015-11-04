@@ -85,11 +85,11 @@ public class Decodificador {
                 contexto.PC = contexto.registros[r1];
                 //System.out.print("PC="+contexto.PC);
                 break;
-            /*case "11":
+            /*case "50":
                 registros[r2] = M*(r3+registros[r1]);
                 registros[32] = r3+registros[r1];
                 break;
-            case "17": //verificar este codOp porque está repetido, era originalmente 12
+            case "51": //verificar este codOp porque está repetido, era originalmente 12
                 if(registros[32] == r3+registros[r1]){
                     //no entiendo donde se guarda registros[r2]
                 }else{
