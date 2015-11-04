@@ -1,2 +1,6 @@
 ProyectoArchitectura/nbproject/private/private.properties
 ProyectoArchitectura/nbproject/private/private.xml
+*.class
+/ProyectoArchitectura/nbproject/private/
+/ProyectoArchitectura/dist/
+/ProyectoArchitectura/build/

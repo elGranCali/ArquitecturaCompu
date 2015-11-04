@@ -62,12 +62,12 @@ public class Decodificador {
                 contexto.registros[r3]=contexto.registros[r1]/contexto.registros[r2];
                 //System.out.print(contexto.registros[r3]);
                 break;
-            /*case "35":
-                registros[r2]= M*(r3+registros[r1]);
-                System.out.print(registros[r2]);
-                break;*/
-            /*case "43":
-                break;*/
+            case "35":
+                contexto.registros[r2]= M*(r3+contexto.registros[r1]);
+                //System.out.print(registros[r2]);
+                break;
+            case "43":
+                break;
             case "4":
                 if(contexto.registros[r1] == 0)
                     contexto.PC = contexto.PC+(r3*4);                             
@@ -111,4 +111,20 @@ public class Decodificador {
         } 
         return esFin;
     }
+
+    public static boolean instruccionMemoria(String instruccion){
+        String [] division = instruccion.split(" ");
+        boolean esFin = false;
+        if(division[0].equals("35") || division[0].equals("43") 
+                    || division[0].equals("50") || division[0].equals("51")) {
+            esFin = true; 
+        } 
+        return esFin;
+    }
+    
+    public static int getDireccion(String hilillo){
+        String [] division = hilillo.split(" ");
+        return Integer.parseInt(division[3]) + contexto.registros[Integer.parseInt(division[1])];
+    }
+    
 }
