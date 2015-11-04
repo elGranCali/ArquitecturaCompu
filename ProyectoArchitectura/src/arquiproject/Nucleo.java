@@ -9,6 +9,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.ConcurrentLinkedQueue; 
+import java.util.concurrent.Semaphore;
 
 /**
  *
@@ -21,8 +22,10 @@ public class Nucleo extends Thread {
     public Contexto contexto;
     int bloquesEnCache = 8; 
     int [][] cacheInstrucciones = new int[8][17];
+    int [][] cacheDatos = new int[8][6];
     boolean esFin = false;
     private final Lock lockOcupado;
+    private final static Semaphore lockCache = new Semaphore(1);
     public static int QUAMTUM = 20;
     public static int m = 2;
     public static int b = 2;
@@ -45,6 +48,15 @@ public class Nucleo extends Thread {
         }
         
     }
+    
+   public static boolean pedirCache() {
+       return lockCache.tryAcquire();
+   }
+   
+   public static boolean liberarCache() {
+       lockCache.release();
+       return true;
+   }
     
      public void imprimirCache() {
         String cajita = "Cache de Nucleo "+ id +"\n";
@@ -136,7 +148,7 @@ public class Nucleo extends Thread {
                 String hilillo = leerInstruccionDeCache(nuevoNumBloque, numPalabra);
                 Decodificador.decodificacion(hilillo, contexto);
                 System.out.println("Instruccion "+ hilillo +" del nucleo " + id.toUpperCase() + " con el " + contexto.id);
-                if (!completadoEnEsteCiclo) {   // 2da Entrega
+                if (Decodificador.instruccionMemoria(hilillo)) {   // 2da Entrega
                     // es una operación SW o LW pues dura mas de un ciclo
                     // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
                     
@@ -144,8 +156,7 @@ public class Nucleo extends Thread {
                     boolean instruccionCompleta = false;
                     while (!instruccionCompleta){
                         //tomar la cache propia
-                        boolean cacheHit = true; // Solo para que compile
-                        if(cacheHit){
+                        if(cacheHit(3)){
                             // Copie el dato en el registro
                         } else {
                             boolean bloqueActualModificado = false;
@@ -246,6 +257,18 @@ public class Nucleo extends Thread {
         contexto = null; // Retiramos el contexto del nuecleo
     }
     
+    public void invalidarCache(int bloqueMemoria){
+        cacheDatos[bloqueMemoria%8][5]=-1;
+    }
+    
+    public int[] getBloque(int bloque) {
+        return cacheDatos[bloque];
+    }
+    
+    public boolean cacheHit(int bloqueMemoria){
+        //Para los estados -1: Invalido, 0: default/compartido y 1:Modificado
+        return (cacheDatos[bloqueMemoria%8][4]==bloqueMemoria &&  cacheDatos[bloqueMemoria%8][5]>-1);
+    }
     
     @Override
     public void run(){
