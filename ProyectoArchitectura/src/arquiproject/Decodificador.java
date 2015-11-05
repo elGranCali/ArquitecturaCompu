@@ -112,19 +112,46 @@ public class Decodificador {
         return esFin;
     }
 
-    public static boolean instruccionMemoria(String instruccion){
+    public static int instruccionMemoria(String instruccion){
         String [] division = instruccion.split(" ");
-        boolean esFin = false;
-        if(division[0].equals("35") || division[0].equals("43") 
-                    || division[0].equals("50") || division[0].equals("51")) {
-            esFin = true; 
+        int codigoInstr = 0;
+        if(division[0].equals("35")) {
+            codigoInstr=35;
+        }
+        if (division[0].equals("43")) {   
+            codigoInstr = 43; 
         } 
-        return esFin;
+        if (division[0].equals("50")) {   
+            codigoInstr = 50; 
+        } 
+        if (division[0].equals("51")) {   
+            codigoInstr = 51; 
+        } 
+        return codigoInstr;
     }
     
     public static int getDireccion(String hilillo){
         String [] division = hilillo.split(" ");
         return Integer.parseInt(division[3]) + contexto.registros[Integer.parseInt(division[1])];
+    }
+    
+    public static int procesarDireccion(String hilillo) {  // SW R1 n(R2)
+            int direccionDato;
+            String [] pedazos = hilillo.split(" ");
+            String direccion = pedazos[2]; // n(R2)
+            String[] offset = direccion.split("()");  // n   R2
+            System.out.println("n:"+offset[0]+" r:"+offset[1]);
+
+            int n = Integer.parseInt(offset[0]);
+            int r = Integer.parseInt(offset[1]);
+                
+            direccionDato = contexto.registros[r] + n;
+
+            return direccionDato;
+    }
+
+    static void ejecutarLectura(int[][] cacheDatos, int direccion, Contexto contexto, String hilillo) {
+        // Settea en el registro del contexto el valor leido desde la cache 
     }
     
 }

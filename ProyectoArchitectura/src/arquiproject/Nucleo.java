@@ -11,6 +11,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 import java.util.concurrent.Semaphore;
 
+
 /**
  *
  * @author CALI
@@ -20,7 +21,9 @@ public class Nucleo extends Thread {
     public String id;
     public boolean ocupado;
     public Contexto contexto;
-    int bloquesEnCache = 8; 
+    int bloquesEnCacheI = 8; 
+    public static final int NUMERODEBLOQUESENCACHE = 8; 
+    public static final int PALABRASPORBLOQUE = 4;
     int [][] cacheInstrucciones = new int[8][17];
     int [][] cacheDatos = new int[8][6]; // COLUMNA 4 sera numBloque  y 5 estado -1: invalido 0: compartido 1: modificado 
     boolean esFin = false;
@@ -55,13 +58,27 @@ public class Nucleo extends Thread {
         
     }
     
-   public static boolean pedirCache() {
+        // Este método puede ser llamado en cualquier momento que se termine un ciclo
+    private void avanzarReloj() throws InterruptedException{
+        if(HiloMaestro.stepByStep){
+            if(this.contexto != null){
+                HiloMaestro.textArea.append(this.contexto.toString());
+                //Thread.sleep(3000);
+            }
+        }
+        try {
+            barreraLock.await();
+        } catch (BrokenBarrierException ex) {
+            System.out.println("Se reseteo la barrera");
+        }
+    }
+    
+   public boolean pedirCache() {
        return lockCache.tryAcquire();
    }
    
-   public static boolean liberarCache() {
-       lockCache.release();
-       return true;
+   public static void liberarCache() {
+       lockCache.release();  
    }
     
      public void imprimirCache() {
@@ -97,24 +114,7 @@ public class Nucleo extends Thread {
             lockOcupado.unlock();
         }
     }
-    
-   
-    // Este método puede ser llamado en cualquier momento que se termine un ciclo
-    private void avanzarReloj() throws InterruptedException{
-        if(HiloMaestro.stepByStep){
-            if(this.contexto != null){
-                HiloMaestro.textArea.append(this.contexto.toString());
-                //Thread.sleep(3000);
-            }
-        }
-        try {
-            barreraLock.await();
-        } catch (BrokenBarrierException ex) {
-            System.out.println("Se reseteo la barrera");
-        }
-    }
-    
-    
+      
     boolean estaEnCache(int numBloque){
         // revisamos si existe la tag en la columna 16 de la matriz de cache igual a numBloque        
         boolean result = false; 
@@ -125,12 +125,12 @@ public class Nucleo extends Thread {
         }
         return result; 
     }
-	
-    boolean estaEnCacheDatos(int numBloque){
-        // revisamos si existe la tag en la columna 4 de la matriz de cache igual a numBloque        
+    
+    	
+    boolean bloqueDatosModificado (int numBloque){       
         boolean result = false; 
         for (int i=0; i<8; i++) {
-            if (cacheDatos[i][4] == numBloque) {
+            if (cacheDatos[i][5] == 1) {
                 result = true; 
             } 
         }
@@ -163,34 +163,10 @@ public class Nucleo extends Thread {
         return hilillo;
     }
 	
-	/*
-		int leerDatosDeCache(int numBloque, int numPalabra) {
-			int dato = cacheDatos[numBloque][numPalabra];
-			return dato;
-		}
-	*/
-	
-	 int procesarDireccion(String hilillo) {
-        int direccionDato = 0;
-        String [] pedazos = hilillo.split(" ");
-        String direccion = pedazos[2];
-        String[] offset = direccion.split("()");
-        System.out.println("n:"+offset[0]+" r:"+offset[1]);
-        
-        int n = Integer.parseInt(offset[0]);
-        int r = Integer.parseInt(offset[1]);
-        
-        direccionDato = contexto.registros[r] + n;
-        
-        return direccionDato;
-    }
-	
-	public boolean cacheDatosLibre() {
-        if (cacheDatosEnUso){
-            return true;
-        } else {
-            return false;
-        }
+    public int [] getBloqueCache( int numBloqueC) {
+        int [] bloque = new int [4];
+        System.arraycopy(cacheDatos[numBloqueC], 0, bloque, 0, PALABRASPORBLOQUE);
+        return bloque;
     }
     
 	
@@ -205,69 +181,29 @@ public class Nucleo extends Thread {
             
             int numBloque = contexto.PC/16; // Bloque en memoria
             int numPalabra = contexto.PC%16; // busca palabra
-            int nuevoNumBloque = numBloque%bloquesEnCache;  // averiguar donde colocar bloque
-            //imprimirTags();
+            int nuevoNumBloque = numBloque%bloquesEnCacheI;  // averiguar donde colocar bloque
+
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Nucleo: " + id + " Bloque "+ numBloque + " esta en cache"); 
                 System.out.println("Buscando en cache el nuevo bloque: " + nuevoNumBloque + " Palabra "+ numPalabra); 
+                
                 String hilillo = leerInstruccionDeCache(nuevoNumBloque, numPalabra);
                 Decodificador.decodificacion(hilillo, contexto);
                 System.out.println("Instruccion "+ hilillo +" del nucleo " + id.toUpperCase() + " con el " + contexto.id);
-                if (Decodificador.instruccionMemoria(hilillo)) {   // 2da Entrega
-                    int direccionDato = procesarDireccion(hilillo);
-                    int numBloqueDato = direccionDato/4; // Bloque en memoria de datos creo q aqui se le deben sumar 640
+                
+                int tipo = Decodificador.instruccionMemoria(hilillo);
+                if (tipo > 0) {   // 2da Entrega
+                    int direccionDato = Decodificador.procesarDireccion(hilillo);
+                    int numBloqueDatoM = direccionDato/4; // Bloque en memoria de datos creo q aqui se le deben sumar 640
                     int numPalabraDato = direccionDato%4; // busca palabra
-                    int nuevoNumBloqueDato = numBloque%bloquesEnCache;  // averiguar donde colocar bloque
-                    
-                    // es una operación SW o LW pues dura mas de un ciclo
-                    // Volver a calcular los ciclos de espera, pedir el bus, leer memoria, avanzar reloj cuando termine espera
-                    
-                    // CASO DEL LW
-                    boolean instruccionCompleta = false;
-                    while (!instruccionCompleta){
-                        //tomar la cache propia
-                        cacheDatosEnUso = true;
-                        if(cacheHit(numBloqueDato)){
-                            // Copie el dato en el registro
-                        } else {
-                            boolean bloqueActualModificado = false;
-                            if (bloqueActualModificado){
-                                if(HiloMaestro.pedirBusDatos()){
-                                    //Escriba los datos modificados para dar campo a los nuevos
-                                } else {
-                                    //LIBERAR CACHE
-                                    cacheDatosEnUso = false;
-                                    continue;
-                                } 
-                            } else {		
-                                boolean pedirOtraCache = HiloMaestro.puedoInvalidarCache(id);
-                                //boolean pedirOtraCache = false; 
-                                if(HiloMaestro.pedirBusDatos() && pedirOtraCache){
-                                    // hacr metodo en HM de pregunar por el bloque en otra cache y cambiarlo por el false 
-                                    boolean cacheHitEnLaOtraCache = false;
-                                    if (cacheHitEnLaOtraCache){
-                                        // Copie desde la otra cache
-                                    } else {
-                                        //Copie desde memoria
-                                    }
-                                    // liberar cache vecina
-                                } else {
-                                    //LIBERAR CACHE
-                                    cacheDatosEnUso = false; // liberar mi cache
-                                    // y avanzar reloj
-                                    try {
-                                            avanzarReloj();
-                                    } catch (InterruptedException ex) {
-                                            System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
-                                    }
-                                    continue;
-                                }
-                            }
-                        }
-                    }
+                   
+                    if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
+                        ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo);
+                    } else {
+                        ejecutarSW_SC(tipo==51);
+                    }                    
                 }else {
                     q--;                        // Disminuimos Quatum 
-                    //lockFin.lock();
                     try {
                         esFin = Decodificador.esFin(hilillo);
                         if (esFin){
@@ -285,7 +221,6 @@ public class Nucleo extends Thread {
                     } finally {
                        // lockOcupado.unlock();
                     }
-                    // Avanzar reloj 
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
@@ -304,7 +239,7 @@ public class Nucleo extends Thread {
                     try {
                         avanzarReloj();
                     } catch (InterruptedException ex) {
-                        System.out.println("AVANCE EN NUCLEO" + id);;
+                        System.out.println("AVANCE EN NUCLEO" + id);
                     }
                 } else {
                     // traer de memoria las 4 palabras del bloque 
@@ -377,4 +312,51 @@ public class Nucleo extends Thread {
         }
         System.out.println("TERMINO EL NUCLEO " +id);
     }        
+
+    private void ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) {
+        if(pedirCache()){ // Si pudo tomar la cache, la toma
+            if (cacheHit(numBloqueDatoM)){  // Es un
+                Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo);
+            }else {
+                if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
+                    //PARTE DEL WRITE BACK
+                    if(bloqueDatosModificado(numBloqueDatoM%4)){
+                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%4], numBloqueDatoM);  //Esto es el write-back
+                    } 
+                    
+                    if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
+                        if (HiloMaestro.spoofing(id, numBloqueDatoM)) {
+                            //ESTA EN LA OTRA CACHE
+                            int [] bloqueMemoria = HiloMaestro.leerDesdeLaOtraCache(id, numBloqueDatoM);
+                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%4], 0, NUMERODEBLOQUESENCACHE);
+                        } else {
+                            //HAY QUE IR A MEMORIA
+                            int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
+                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%4], 0, NUMERODEBLOQUESENCACHE);
+                        }
+                    } else {
+                        HiloMaestro.soltarBusDatos();
+                        liberarCache();
+                        try {
+                            avanzarReloj();
+                        } catch (InterruptedException ex) {
+                            System.out.println("Error al liberar la cache y el bus del nucleo: " + id);
+                        }
+                    } 
+                } else {
+                    liberarCache();
+                }
+            }            
+        } else {  // No se pudo pedir la cache
+            try {
+                avanzarReloj();
+            } catch (InterruptedException ex) {
+                System.out.println("Error al adquirir la cache propia del nucleo: " + id);
+            }
+        }
+    }
+
+    private void ejecutarSW_SC(boolean esSC) {
+
+    }
 }

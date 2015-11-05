@@ -25,9 +25,9 @@ public class HiloMaestro {
     static int totalInstrucciones = 0;
     public static int hilosAprocesar = 0;
     static int cantidadMemInstrucciones = 640; 
-	static int cantidadMemDatos = 1408;
+    static int cantidadMemDatos = 1408;
     static int [] memoriaInstrucciones = new int[640];
-	static int [] memoriaDatos = new int [1408];
+    static int [] memoriaDatos = new int [1408];
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     int quantumCiclos;
@@ -40,10 +40,10 @@ public class HiloMaestro {
     private final static Semaphore busDatos = new Semaphore(1);
     static Nucleo n1;
     static Nucleo n2; 
-	/*
-	Nucleo n1;
+    /*
+    Nucleo n1;
     Nucleo n2; 
-	*/
+    */
     private final ConcurrentLinkedQueue<Contexto> cola = new ConcurrentLinkedQueue<>();
     public static final ConcurrentLinkedQueue<Contexto> colaDeTerminados = new ConcurrentLinkedQueue<>();
     public static boolean stepByStep = false;
@@ -214,12 +214,12 @@ public class HiloMaestro {
         System.out.println(cajita);
     }
 	
-	public static void imprimirMemDatos() {
-        String cajita = "Memoria Datos:\n";
-        for (int i=0; i < cantidadMemDatos; i++){
-            cajita += "["+memoriaDatos[i]+"] , ";   
-        }
-        System.out.println(cajita);
+    public static void imprimirMemDatos() {
+    String cajita = "Memoria Datos:\n";
+    for (int i=0; i < cantidadMemDatos; i++){
+        cajita += "["+memoriaDatos[i]+"] , ";   
+    }
+    System.out.println(cajita);
     }
     
     public static int leerMemoria(int posicion) {
@@ -227,7 +227,7 @@ public class HiloMaestro {
         return valor; 
     }
 	
-	public static int leerMemoriaDatos(int posicion) {
+    public static int leerMemoriaDatos(int posicion) {
         int valor = memoriaDatos[posicion];
         return valor;
     }
@@ -237,7 +237,7 @@ public class HiloMaestro {
     }
     
     public void setTextField(javax.swing.JTextArea jTextArea1){
-        this.textArea = jTextArea1;
+        HiloMaestro.textArea = jTextArea1;
     }
     
     public void setParametrosCiclos(int q, int m, int b) {
@@ -250,16 +250,14 @@ public class HiloMaestro {
         System.out.println("q="+quantumCiclos+" m="+memoriaCiclos+" b="+busCiclos); 
     }
     
-    public static boolean puedoInvalidarCache(String idNucleo) {
-        
-        // seria mejor invalidarla de una vez.     
-        boolean libre = false;
+    // Metodo que permite pedir la cache del otro nucleo,usando al hilo
+    // maestro como intermediario
+    public static boolean pedirCacheDelOtroNucleo(String idNucleo) {
         if( idNucleo.equalsIgnoreCase("uno")){
-            libre = n1.cacheDatosLibre();
+            return n2.pedirCache();
         }else{
-            libre = n2.cacheDatosLibre();
+            return n1.pedirCache();
         }
-        return libre;
     }
 	
      public HiloMaestro() {
@@ -268,4 +266,34 @@ public class HiloMaestro {
         n2 = new Nucleo(lock, "dos", lockOcupado2, cola, colaDeTerminados); 
         System.out.println("Se crean los 2 nucleos");      
     }
+     
+    public static void escribirEnMemoria(int [] bloque, int numBloqueMemoria) {
+        //Escriba en memoria el bloque corr
+    }
+    
+    public static int [] leerDesdeMemoria(int direccion) {
+        int [] bloque = new int[4];
+        for (int i = 0 ; i < Nucleo.NUMERODEBLOQUESENCACHE; i++) {
+            bloque[i] = memoriaDatos[direccion+i];
+        }
+        return bloque;
+    }
+    
+     public static int [] leerDesdeLaOtraCache(String nucleoFuente, int numBloqueDatoM) {
+        if( nucleoFuente.equalsIgnoreCase("uno")){
+            return n2.getBloque(numBloqueDatoM%4);
+        }else{
+            return n1.getBloque(numBloqueDatoM%4);
+        }
+    }
+    
+    public static boolean spoofing (String nucleoFuente, int numBloqueDatoM) {
+        if( nucleoFuente.equalsIgnoreCase("uno")){
+            return n2.cacheHit(numBloqueDatoM);
+        }else{
+            return n1.cacheHit(numBloqueDatoM);
+        }
+    }
+    
+     
 } // Final de clase
