@@ -134,7 +134,7 @@ public class HiloMaestro {
                     asignarContexto(n2);    
                 }
                 if (hayTrabajo()) {
-                    lock.await(3,TimeUnit.SECONDS);
+                    lock.await(3,TimeUnit.DAYS);
                 } else {
                     if (lock.getNumberWaiting() != 0) {
                         lock.reset();

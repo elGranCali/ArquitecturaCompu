@@ -193,7 +193,7 @@ public class Nucleo extends Thread {
                 
                 int tipo = Decodificador.instruccionMemoria(hilillo);
                 if (tipo > 0) {   // 2da Entrega
-                    int direccionDato = Decodificador.procesarDireccion(hilillo);
+                    int direccionDato = Decodificador.getDireccion(hilillo, contexto);
                     int numBloqueDatoM = direccionDato/4; // Bloque en memoria de datos creo q aqui se le deben sumar 640
                     int numPalabraDato = direccionDato%4; // busca palabra
                    

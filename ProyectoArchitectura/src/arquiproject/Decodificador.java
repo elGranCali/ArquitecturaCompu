@@ -130,7 +130,7 @@ public class Decodificador {
         return codigoInstr;
     }
     
-    public static int getDireccion(String hilillo){
+    public static int getDireccion(String hilillo, Contexto contexto){
         String [] division = hilillo.split(" ");
         return Integer.parseInt(division[3]) + contexto.registros[Integer.parseInt(division[1])];
     }
