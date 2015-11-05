@@ -206,11 +206,9 @@ public class Nucleo extends Thread {
                             } catch (InterruptedException ex) {
                                 System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
                             }
-                        }
-                        
+                        }                       
                     } else {
-                        ejecutarSW_SC(tipo==51);
-                        
+                        ejecutarSW_SC(tipo==51);                       
                     }  
                     q--;
                 }else {
@@ -348,13 +346,13 @@ public class Nucleo extends Thread {
                         if ( snooping == 1) {
                             //ESTA EN LA OTRA CACHE
                             int [] bloqueMemoria = HiloMaestro.leerDesdeLaOtraCache(id, numBloqueDatoM);
-                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, NUMERODEBLOQUESENCACHE);
+                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
                             return true;
                         } else {
                             // Liberar la cache vecina
                             //HAY QUE IR A MEMORIA
                             int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
-                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, NUMERODEBLOQUESENCACHE);
+                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
                             return true;
                         }
                     } else {

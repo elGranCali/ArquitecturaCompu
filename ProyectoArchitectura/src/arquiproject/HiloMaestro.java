@@ -25,9 +25,9 @@ public class HiloMaestro {
     static int totalInstrucciones = 0;
     public static int hilosAprocesar = 0;
     static int cantidadMemInstrucciones = 640; 
-    static int cantidadMemDatos = 1408;
+    static int cantidadMemDatos = 352;
     static int [] memoriaInstrucciones = new int[640];
-    static int [] memoriaDatos = new int [1408];
+    static int [] memoriaDatos = new int [352];
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     int quantumCiclos;
@@ -203,7 +203,7 @@ public class HiloMaestro {
     
     public static void initMemoriaDatos() {
         for (int i=0; i < cantidadMemDatos; i++) {
-            memoriaDatos[i] = -999;
+            memoriaDatos[i] = 1;
         }
     }
 	
@@ -274,6 +274,7 @@ public class HiloMaestro {
     
     public static int [] leerDesdeMemoria(int direccion) {
         int [] bloque = new int[4];
+        int direccionFisica = (direccion -640)% 4;
         for (int i = 0 ; i < Nucleo.NUMERODEBLOQUESENCACHE; i++) {
             bloque[i] = memoriaDatos[direccion+i];
         }

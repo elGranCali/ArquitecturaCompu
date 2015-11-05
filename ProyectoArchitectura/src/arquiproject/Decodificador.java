@@ -132,7 +132,8 @@ public class Decodificador {
     
     public static int getDireccion(String hilillo, Contexto contexto){
         String [] division = hilillo.split(" ");
-        return Integer.parseInt(division[3]) + contexto.registros[Integer.parseInt(division[1])];
+        int direccionVirtual= Integer.parseInt(division[3]) + contexto.registros[Integer.parseInt(division[1])]; 
+        return direccionVirtual; 
     }
     
     public static int procesarDireccion(String hilillo) {  // SW R1 n(R2)
