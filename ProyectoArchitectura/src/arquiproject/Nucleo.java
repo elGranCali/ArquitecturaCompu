@@ -10,6 +10,8 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.ConcurrentLinkedQueue; 
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -198,10 +200,19 @@ public class Nucleo extends Thread {
                     int numPalabraDato = direccionDato%4; // busca palabra
                    
                     if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
-                        ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo);
+                        while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
+                             try {
+                                avanzarReloj();
+                            } catch (InterruptedException ex) {
+                                System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
+                            }
+                        }
+                        
                     } else {
                         ejecutarSW_SC(tipo==51);
-                    }                    
+                        
+                    }  
+                    q--;
                 }else {
                     q--;                        // Disminuimos Quatum 
                     try {
@@ -282,9 +293,11 @@ public class Nucleo extends Thread {
         return cacheDatos[bloque];
     }
     
-    public boolean cacheHit(int bloqueMemoria){
-        //Para los estados -1: Invalido, 0: default/compartido y 1:Modificado
-        return (cacheDatos[bloqueMemoria%8][4]==bloqueMemoria &&  cacheDatos[bloqueMemoria%8][5]>-1);
+    public int cacheHit(int bloqueMemoria){
+        if (cacheDatos[bloqueMemoria%8][4]==bloqueMemoria){
+            return cacheDatos[bloqueMemoria%8][5];
+        }
+        return -1;
     }
     
     @Override
@@ -313,26 +326,36 @@ public class Nucleo extends Thread {
         System.out.println("TERMINO EL NUCLEO " +id);
     }        
 
-    private void ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) {
+    private boolean ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) {
         if(pedirCache()){ // Si pudo tomar la cache, la toma
-            if (cacheHit(numBloqueDatoM)){  // Es un
-                Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo);
+            if (cacheHit(numBloqueDatoM) != -1){  // Es un
+                Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo); //Leer la palabra
+                try {
+                    avanzarReloj();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                return true;
             }else {
                 if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
                     //PARTE DEL WRITE BACK
-                    if(bloqueDatosModificado(numBloqueDatoM%4)){
-                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%4], numBloqueDatoM);  //Esto es el write-back
+                    if(bloqueDatosModificado(numBloqueDatoM%8)){  // Revisar el valor de numBloquememoria
+                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM);  //Esto es el write-back
                     } 
                     
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
-                        if (HiloMaestro.spoofing(id, numBloqueDatoM)) {
+                        int snooping = HiloMaestro.snooping(id, numBloqueDatoM);
+                        if ( snooping == 1) {
                             //ESTA EN LA OTRA CACHE
                             int [] bloqueMemoria = HiloMaestro.leerDesdeLaOtraCache(id, numBloqueDatoM);
-                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%4], 0, NUMERODEBLOQUESENCACHE);
+                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, NUMERODEBLOQUESENCACHE);
+                            return true;
                         } else {
+                            // Liberar la cache vecina
                             //HAY QUE IR A MEMORIA
                             int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
-                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%4], 0, NUMERODEBLOQUESENCACHE);
+                            System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, NUMERODEBLOQUESENCACHE);
+                            return true;
                         }
                     } else {
                         HiloMaestro.soltarBusDatos();
@@ -342,9 +365,11 @@ public class Nucleo extends Thread {
                         } catch (InterruptedException ex) {
                             System.out.println("Error al liberar la cache y el bus del nucleo: " + id);
                         }
+                        return false;
                     } 
                 } else {
                     liberarCache();
+                    return false;
                 }
             }            
         } else {  // No se pudo pedir la cache
@@ -353,6 +378,7 @@ public class Nucleo extends Thread {
             } catch (InterruptedException ex) {
                 System.out.println("Error al adquirir la cache propia del nucleo: " + id);
             }
+            return false;
         }
     }
 

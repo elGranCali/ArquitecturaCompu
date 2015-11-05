@@ -123,6 +123,7 @@ public class HiloMaestro {
         // revisar q en la cola hayan hilos para asignar 2!! 
         asignarContexto(n1);
         asignarContexto(n2);
+        initMemoriaDatos();
         iniciarHilos(); 
         while(true) {
             System.out.println("Avance hilo maestro"); 
@@ -200,9 +201,9 @@ public class HiloMaestro {
         }
     }
     
-	 public static void initMemoriaDatos() {
+    public static void initMemoriaDatos() {
         for (int i=0; i < cantidadMemDatos; i++) {
-            memoriaDatos[i] = -1;
+            memoriaDatos[i] = -999;
         }
     }
 	
@@ -287,7 +288,7 @@ public class HiloMaestro {
         }
     }
     
-    public static boolean spoofing (String nucleoFuente, int numBloqueDatoM) {
+    public static int snooping (String nucleoFuente, int numBloqueDatoM) {
         if( nucleoFuente.equalsIgnoreCase("uno")){
             return n2.cacheHit(numBloqueDatoM);
         }else{
