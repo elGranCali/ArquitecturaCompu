@@ -201,15 +201,22 @@ public class Nucleo extends Thread {
                    
                     if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
                         while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
-                             try {
+                            try {
                                 avanzarReloj();
                             } catch (InterruptedException ex) {
                                 System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
                             }
                         }                       
                     } else {
-                        ejecutarSW_SC(tipo==51);                       
-                    }  
+                         while ( !ejecutarSW_SC(tipo==51, direccionDato, numBloqueDatoM, hilillo)){
+                            try {
+                                avanzarReloj();
+                            } catch (InterruptedException ex) {
+                                System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
+                            }
+                         }
+                    }
+                    // reducir quantum, pues termina de ejecutarse la instruccion lw/sw/ll/sc 
                     q--;
                 }else {
                     q--;                        // Disminuimos Quatum 
@@ -293,10 +300,11 @@ public class Nucleo extends Thread {
     
     public int cacheHit(int bloqueMemoria){
         if (cacheDatos[bloqueMemoria%8][4]==bloqueMemoria){
-            return cacheDatos[bloqueMemoria%8][5];
+            return cacheDatos[bloqueMemoria%8][5]; // envia estado del bloque 
         }
         return -1;
     }
+   
     
     @Override
     public void run(){
@@ -380,7 +388,97 @@ public class Nucleo extends Thread {
         }
     }
 
-    private void ejecutarSW_SC(boolean esSC) {
+    public void traerBloqueMemDatos(int numBloqueDatoM) {
+        for (int i = 0; i < 4; i++){
+            cacheDatos[numBloqueDatoM%8][i] = HiloMaestro.leerMemoriaDatos(i+(numBloqueDatoM*4));
+        }
+    }
+    
+    public void subirBloqueMemDatos(int numBloqueDatoM) {
+        for (int i = 0; i < 4; i++){
+            int valor = cacheDatos[numBloqueDatoM%8][i];
+            HiloMaestro.escribirMemoriaDatos(i+(numBloqueDatoM*4), valor);
+        }
+    }
+    
+    public int cacheState(int bloqueMemoria){
+        if (cacheDatos[bloqueMemoria%8][5] == 1){
+            return 1; // modificado 
+        } else {
+            return 0; // compartido
+        }
+    }
+    
+    public int [] compartirBloque(int numBloqueDatoM, int [] bloque) {
+        for (int i = 0; i < 4; i++){
+            bloque[i] = cacheDatos[numBloqueDatoM%8][i];
+        }
+        return bloque; 
+    }
+    
+    public void actualizarBloque(int numBloqueDatoM, int [] bloque) {
+        for (int i = 0; i < 4; i++){
+            cacheDatos[numBloqueDatoM%8][i] = bloque[i]; 
+        }
+    }
+    
+    
+    private boolean ejecutarSW_SC(boolean esSC, int direccion, int numBloqueDatoM, String hilillo) {
 
+        int estado = cacheHit(numBloqueDatoM); 
+        if(pedirCache()){ // Si pudo tomar la cache, la toma
+            
+            if (estado != -1){  // Es un C o un M osea un hit 
+                
+                if (estado == 1)  { // modificado 
+                    //no pide bus, solo escribe
+                    //Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                } else { // compartido 
+                    // si es C, pide bus para avisar a las demas caches q modificara un bloque
+                    // luego de avisar, escribe 
+                    // Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                }
+                return true;
+            }else { // hay que traerlo de memoria o de la otra cache 
+                if (HiloMaestro.pedirBusDatos()){  
+                    if(cacheState(numBloqueDatoM) == 1){  // si el bloque actual de mi cache esta Modificado, lo escribo en memoria 
+                        subirBloqueMemDatos(numBloqueDatoM);
+                    } 
+                    // ya ahora si puedo caerle encima con cosas al bloque
+                    // primero me fijo si esta en la otra cache
+                    if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
+                        int snooping = HiloMaestro.snooping(id, numBloqueDatoM); // me dice el estado en que esté el bloque en la otra cache
+                        if ( snooping == 1) { // esta en M en la otra cache
+                            HiloMaestro.subirBloqueCacheVecinaAMemDatos(id, numBloqueDatoM);
+                            HiloMaestro.subirBloqueCacheVecinaACacheNeedly(id, numBloqueDatoM);
+                        } else { // esta en C o I, se trae de memoria, no ocupamos cache vecina, la liberamos.
+                            traerBloqueMemDatos(numBloqueDatoM);
+                        }
+                        // poner invalido cache 
+                        HiloMaestro.liberarCacheVecina(id);
+                        return false;
+                    } else {
+                        HiloMaestro.soltarBusDatos();
+                        liberarCache();
+                        try {
+                            avanzarReloj();
+                        } catch (InterruptedException ex) {
+                            System.out.println("Error al liberar la cache y el bus del nucleo: " + id);
+                        }
+                        return false;
+                    } 
+                } else {
+                    liberarCache();
+                    return false;
+                }
+            }            
+        } else {  // No se pudo pedir la cache
+            try {
+                avanzarReloj();
+            } catch (InterruptedException ex) {
+                System.out.println("Error al adquirir la cache propia del nucleo: " + id);
+            }
+            return false;
+        }
     }
 }

@@ -233,6 +233,10 @@ public class HiloMaestro {
         return valor;
     }
     
+    public static void escribirMemoriaDatos(int posicion, int valor) {
+        memoriaDatos[posicion] = valor;
+    }
+    
     public void setStepByStep(boolean step){
         stepByStep = step;
     }
@@ -281,6 +285,7 @@ public class HiloMaestro {
         return bloque;
     }
     
+    
      public static int [] leerDesdeLaOtraCache(String nucleoFuente, int numBloqueDatoM) {
         if( nucleoFuente.equalsIgnoreCase("uno")){
             return n2.getBloque(numBloqueDatoM%4);
@@ -294,6 +299,35 @@ public class HiloMaestro {
             return n2.cacheHit(numBloqueDatoM);
         }else{
             return n1.cacheHit(numBloqueDatoM);
+        }
+    }
+    
+    
+    // metodos utilizados en SW  
+    public static void subirBloqueCacheVecinaAMemDatos(String nucleoFuente, int numBloqueDatoM){
+        if( nucleoFuente.equalsIgnoreCase("uno")){
+             n2.subirBloqueMemDatos(numBloqueDatoM);
+        }else{
+             n1.subirBloqueMemDatos(numBloqueDatoM);
+        }
+    }
+    
+     public static void subirBloqueCacheVecinaACacheNeedly(String nucleoFuente, int numBloqueDatoM){
+        int [] bloque = new int[4];
+        if( nucleoFuente.equalsIgnoreCase("uno")){
+             bloque = n2.compartirBloque(numBloqueDatoM, bloque);
+             n1.actualizarBloque(numBloqueDatoM, bloque);
+        }else{
+             bloque = n1.compartirBloque(numBloqueDatoM, bloque);
+             n2.actualizarBloque(numBloqueDatoM, bloque);
+        }
+    }
+    
+    public static void liberarCacheVecina (String nucleoFuente) {
+        if( nucleoFuente.equalsIgnoreCase("uno")){
+            n2.liberarCache();
+        }else{
+            n1.liberarCache();
         }
     }
     
