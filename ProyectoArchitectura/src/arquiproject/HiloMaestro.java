@@ -203,7 +203,7 @@ public class HiloMaestro {
     
     public static void initMemoriaDatos() {
         for (int i=0; i < cantidadMemDatos; i++) {
-            memoriaDatos[i] = 1;
+            memoriaDatos[i] = 99999;
         }
     }
 	
@@ -279,8 +279,8 @@ public class HiloMaestro {
     public static int [] leerDesdeMemoria(int direccion) {
         int [] bloque = new int[4];
         int direccionFisica = (direccion -640)% 4;
-        for (int i = 0 ; i < Nucleo.NUMERODEBLOQUESENCACHE; i++) {
-            bloque[i] = memoriaDatos[direccion+i];
+        for (int i = 0 ; i < Nucleo.PALABRASPORBLOQUE; i++) {
+            bloque[i] = memoriaDatos[direccionFisica+i];
         }
         return bloque;
     }

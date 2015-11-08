@@ -30,7 +30,7 @@ public class Nucleo extends Thread {
     int [][] cacheDatos = new int[8][6]; // COLUMNA 4 sera numBloque  y 5 estado -1: invalido 0: compartido 1: modificado 
     boolean esFin = false;
     private final Lock lockOcupado;
-    private final static Semaphore lockCache = new Semaphore(1);
+    private final Semaphore lockCache = new Semaphore(1);
     public static int QUAMTUM = 20;
     public static int m = 2;
     public static int b = 2;
@@ -79,7 +79,7 @@ public class Nucleo extends Thread {
        return lockCache.tryAcquire();
    }
    
-   public static void liberarCache() {
+   public void liberarCache() {
        lockCache.release();  
    }
     
@@ -131,11 +131,9 @@ public class Nucleo extends Thread {
     	
     boolean bloqueDatosModificado (int numBloque){       
         boolean result = false; 
-        for (int i=0; i<8; i++) {
-            if (cacheDatos[i][5] == 1) {
-                result = true; 
-            } 
-        }
+        if (cacheDatos[numBloque][5] == 1) {
+            result = true; 
+         }      
         return result; 
     }
     
@@ -351,8 +349,7 @@ public class Nucleo extends Thread {
                     
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
                         int snooping = HiloMaestro.snooping(id, numBloqueDatoM);
-                        if ( snooping == 1) {
-                            //ESTA EN LA OTRA CACHE
+                        if ( snooping == 1) { //ESTA EN LA OTRA CACHE Y ESTA MODIFICADO
                             int [] bloqueMemoria = HiloMaestro.leerDesdeLaOtraCache(id, numBloqueDatoM);
                             System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
                             return true;
@@ -361,6 +358,8 @@ public class Nucleo extends Thread {
                             //HAY QUE IR A MEMORIA
                             int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
                             System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
+                            cacheDatos[numBloqueDatoM%8][4] = numBloqueDatoM;   // Se settea el numero de bloque    
+                            cacheDatos[numBloqueDatoM%8][5] = 0;                // El estado sera COMPÀRTIDO POR DEFAULT
                             return true;
                         }
                     } else {
