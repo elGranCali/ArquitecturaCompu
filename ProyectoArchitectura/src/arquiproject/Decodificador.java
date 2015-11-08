@@ -153,6 +153,21 @@ public class Decodificador {
 
     static void ejecutarLectura(int[][] cacheDatos, int direccion, Contexto contexto, String hilillo) {
         // Settea en el registro del contexto el valor leido desde la cache 
+        String [] sepHilo = hilillo.split(" ");
+        String registro2 = sepHilo[2];
+        int r2 = Integer.parseInt(registro2);
+        int numBloque = (direccion-640)/16;
+        int numPalabra = (direccion-640)%16;
+        contexto.registros[r2] = cacheDatos[numBloque][numPalabra];
+    }
+    
+    static void ejecutarEscritura(int[][] cacheDatos, int direccion, Contexto contexto, String hilillo){
+        String [] sepHilo = hilillo.split(" ");
+        String registro2 = sepHilo[2];
+        int r2 = Integer.parseInt(registro2);
+        int numBloque = (direccion-640)/16;
+        int numPalabra = (direccion-640)%16;
+        cacheDatos[numBloque][numPalabra] = contexto.registros[r2];     
     }
     
 }

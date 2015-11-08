@@ -432,11 +432,12 @@ public class Nucleo extends Thread {
                 
                 if (estado == 1)  { // modificado 
                     //no pide bus, solo escribe
-                    //Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                    Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
                 } else { // compartido 
                     // si es C, pide bus para avisar a las demas caches q modificara un bloque
                     // luego de avisar, escribe 
-                    // Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                    Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                    //¿aqui habria que liberar caché y bus?
                 }
                 return true;
             }else { // hay que traerlo de memoria o de la otra cache 
