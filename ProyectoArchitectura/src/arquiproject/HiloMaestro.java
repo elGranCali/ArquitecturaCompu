@@ -28,6 +28,7 @@ public class HiloMaestro {
     static int cantidadMemDatos = 352;
     static int [] memoriaInstrucciones = new int[640];
     static int [] memoriaDatos = new int [352];
+
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     int quantumCiclos;
@@ -203,8 +204,11 @@ public class HiloMaestro {
     
     public static void initMemoriaDatos() {
         for (int i=0; i < cantidadMemDatos; i++) {
-            memoriaDatos[i] = 99999;
+            memoriaDatos[i] = i;
         }
+        memoriaDatos[0] = 888;
+        memoriaDatos[1] = 777;
+        memoriaDatos[2] = 666;
     }
 	
     public static void imprimirMemoria() {
@@ -264,8 +268,16 @@ public class HiloMaestro {
             return n1.pedirCache();
         }
     }
-	
-     public HiloMaestro() {
+
+    public static void setEstadoEnOtraCache(String idNucleo, int bloque, int estado) {
+         if( idNucleo.equalsIgnoreCase("uno")){
+            n2.setEstadoBloque(bloque, estado);
+        }else{
+            n1.setEstadoBloque(bloque, estado);
+        }
+    }
+
+    public HiloMaestro() {
         ciclo = 1;
         n1 = new Nucleo(lock, "uno", lockOcupado1, cola, colaDeTerminados);
         n2 = new Nucleo(lock, "dos", lockOcupado2, cola, colaDeTerminados); 
@@ -278,7 +290,8 @@ public class HiloMaestro {
     
     public static int [] leerDesdeMemoria(int direccion) {
         int [] bloque = new int[4];
-        int direccionFisica = (direccion -640)% 4;
+        int numBloque = (direccion -640)/ 16;
+        int direccionFisica = numBloque*4;
         for (int i = 0 ; i < Nucleo.PALABRASPORBLOQUE; i++) {
             bloque[i] = memoriaDatos[direccionFisica+i];
         }

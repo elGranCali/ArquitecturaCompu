@@ -157,7 +157,7 @@ public class Decodificador {
         String registro2 = sepHilo[2];
         int r2 = Integer.parseInt(registro2);
         int numBloque = (direccion-640)/16;
-        int numPalabra = (direccion-640)%16;
+        int numPalabra = (direccion-640)/4%4;
         contexto.registros[r2] = cacheDatos[numBloque][numPalabra];
     }
     

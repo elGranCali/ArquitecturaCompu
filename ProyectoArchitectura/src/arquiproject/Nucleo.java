@@ -170,7 +170,7 @@ public class Nucleo extends Thread {
     }
     
 	
-    public void procesarQuantum () {
+    public void procesarQuantum () throws InterruptedException {
         int tiempoTrayendoBloque = 4*(b+m+b);     
         boolean agregarATerminados = false;
         boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
@@ -194,8 +194,7 @@ public class Nucleo extends Thread {
                 int tipo = Decodificador.instruccionMemoria(hilillo);
                 if (tipo > 0) {   // 2da Entrega
                     int direccionDato = Decodificador.getDireccion(hilillo, contexto);
-                    int numBloqueDatoM = direccionDato/4; // Bloque en memoria de datos creo q aqui se le deben sumar 640
-                    int numPalabraDato = direccionDato%4; // busca palabra
+                    int numBloqueDatoM = (direccionDato-640)/16; // Bloque en memoria de datos creo q aqui se le deben sumar 640
                    
                     if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
                         while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
@@ -306,7 +305,7 @@ public class Nucleo extends Thread {
     
     @Override
     public void run(){
-        while (HiloMaestro.hayTrabajo()) {    // Seria hasta que ya no exista trabajo
+        while (HiloMaestro.hayTrabajo()) {                try {    // Seria hasta que ya no exista trabajo
             // Caso de que no tenga un contexto asignado el debe seguir corriendo  
             if (contexto == null) {
                 System.out.println("Nucleo " + id + " esta ocioso");
@@ -326,19 +325,18 @@ public class Nucleo extends Thread {
                 lockOcupado.unlock();
             }
             System.out.println("Núcleo " + id + " terminado quantum");  
+        }   catch (InterruptedException ex) {
+                Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         System.out.println("TERMINO EL NUCLEO " +id);
     }        
 
-    private boolean ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) {
+    private boolean ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
         if(pedirCache()){ // Si pudo tomar la cache, la toma
             if (cacheHit(numBloqueDatoM) != -1){  // Es un
                 Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo); //Leer la palabra
-                try {
-                    avanzarReloj();
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                avanzarReloj();
                 return true;
             }else {
                 if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
@@ -350,26 +348,33 @@ public class Nucleo extends Thread {
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
                         int snooping = HiloMaestro.snooping(id, numBloqueDatoM);
                         if ( snooping == 1) { //ESTA EN LA OTRA CACHE Y ESTA MODIFICADO
+                            // Se tiene que copiar los datos de la cache vecina y escribir los datos en memoria
                             int [] bloqueMemoria = HiloMaestro.leerDesdeLaOtraCache(id, numBloqueDatoM);
                             System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
+                            HiloMaestro.escribirEnMemoria(bloqueMemoria, numBloqueDatoM); // NO LO HE PROBADO
+                            cacheDatos[numBloqueDatoM%8][4] =numBloqueDatoM; // Estado compartido
+                            cacheDatos[numBloqueDatoM%8][5] =0; // Estado compartido
+                            HiloMaestro.setEstadoEnOtraCache(id ,numBloqueDatoM%8, 0);  //Cambiar el estado de la otra cache de M a C
+                            for (int i = 0;i< (4*b+4*b+4*m);i++){
+                                avanzarReloj();
+                            }
                             return true;
                         } else {
-                            // Liberar la cache vecina
                             //HAY QUE IR A MEMORIA
                             int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
                             System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
                             cacheDatos[numBloqueDatoM%8][4] = numBloqueDatoM;   // Se settea el numero de bloque    
                             cacheDatos[numBloqueDatoM%8][5] = 0;                // El estado sera COMPÀRTIDO POR DEFAULT
+                            Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo);
+                            for (int i = 0;i< (4*b+4*m);i++){
+                                avanzarReloj();
+                            }
                             return true;
                         }
                     } else {
                         HiloMaestro.soltarBusDatos();
                         liberarCache();
-                        try {
-                            avanzarReloj();
-                        } catch (InterruptedException ex) {
-                            System.out.println("Error al liberar la cache y el bus del nucleo: " + id);
-                        }
+                        avanzarReloj();
                         return false;
                     } 
                 } else {
@@ -378,11 +383,7 @@ public class Nucleo extends Thread {
                 }
             }            
         } else {  // No se pudo pedir la cache
-            try {
-                avanzarReloj();
-            } catch (InterruptedException ex) {
-                System.out.println("Error al adquirir la cache propia del nucleo: " + id);
-            }
+            avanzarReloj();
             return false;
         }
     }
@@ -480,5 +481,9 @@ public class Nucleo extends Thread {
             }
             return false;
         }
+    }
+
+    public void setEstadoBloque(int bloque, int estado) {
+        cacheDatos[bloque][5] = estado;
     }
 }
