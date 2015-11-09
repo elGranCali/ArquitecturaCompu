@@ -28,7 +28,8 @@ public class HiloMaestro {
     static int cantidadMemDatos = 352;
     static int [] memoriaInstrucciones = new int[640];
     static int [] memoriaDatos = new int [352];
-
+    static int n1Invalidor = -1;
+    static int n2Invalidor = -1; 
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     int quantumCiclos;
@@ -143,7 +144,18 @@ public class HiloMaestro {
                     }
                     break;
                 }
+                if (n2Invalidor != -1){
+                    //mandarainvalidar el numero de bloque q tenga eln2Invalidor en cache 2
+                    n2.invalidarBloque(n2Invalidor);
+                    n2Invalidor =-1;
+                } 
+                if (n1Invalidor != -1) {
+                    //mandarainvalidar el numero de bloque q tenga eln1Invalidor en cache 1
+                    n2.invalidarBloque(n1Invalidor);
+                    n1Invalidor = -1;
+                }
                 ciclo++;
+                
             } catch (InterruptedException ex) {
                 System.out.println("Interrupcion");
             } catch (BrokenBarrierException ex) {
@@ -341,6 +353,16 @@ public class HiloMaestro {
             n2.liberarCache();
         }else{
             n1.liberarCache();
+        }
+    }
+    
+    public static void avisarInvalidacion(int numBloque, String nucleoFuente) {
+        if( nucleoFuente.equalsIgnoreCase("uno")){
+            // invalidar el numbloque de la cache 2 
+            n2Invalidor = numBloque;
+        }else{
+            // invalidar el numbloque de la cache 1
+            n1Invalidor = numBloque;  
         }
     }
     

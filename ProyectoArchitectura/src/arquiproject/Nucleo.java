@@ -434,6 +434,21 @@ public class Nucleo extends Thread {
         }
     }
     
+     public void invalidarBloque(int numBloque){
+        for (int i = 0; i < 8; i++){
+            if (cacheDatos[i][4] == numBloque) {
+                cacheDatos[i][5] = -1; 
+            }
+        }
+    }
+    
+    public void ponermeModifBloque(int numBloque){
+        for (int i = 0; i < 8; i++){
+            if (cacheDatos[i][4] == numBloque) {
+                cacheDatos[i][5] = 1; 
+            }
+        }
+    }
     
     private boolean ejecutarSW_SC(boolean esSC, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
 
@@ -448,8 +463,13 @@ public class Nucleo extends Thread {
                 } else { // compartido 
                     // si es C, pide bus para avisar a las demas caches q modificara un bloque
                     // luego de avisar, escribe 
-                    Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
-                    //¿aqui habria que liberar caché y bus?
+                    if (HiloMaestro.pedirBusDatos()){ // si es c pide bus 
+                        //avisar a las demas caches 
+                        HiloMaestro.avisarInvalidacion(numBloqueDatoM,id);
+                        Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                    }
+                    HiloMaestro.soltarBusDatos();
+                    liberarCache();
                 }
                 return true;
             }else { // hay que traerlo de memoria o de la otra cache 
@@ -458,28 +478,39 @@ public class Nucleo extends Thread {
                         subirBloqueMemDatos(numBloqueDatoM);
                     } 
                     // ya ahora si puedo caerle encima con cosas al bloque
-                    // primero me fijo si esta en la otra cache
+                    // primero me fijo si puedo pedir la cache vecina y preguntar si el bloque esta ahi
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
                         int snooping = HiloMaestro.snooping(id, numBloqueDatoM); // me dice el estado en que esté el bloque en la otra cache
                         if ( snooping == 1) { // esta en M en la otra cache
                             HiloMaestro.subirBloqueCacheVecinaAMemDatos(id, numBloqueDatoM);
                             HiloMaestro.subirBloqueCacheVecinaACacheNeedly(id, numBloqueDatoM);
+                            
+                            // ponerme como modificado
+                            ponermeModifBloque(numBloqueDatoM);
+                            // poner a la otra cache como invalido
+                            HiloMaestro.avisarInvalidacion(numBloqueDatoM, id);
+                            //como fui a memoria y todo simulo los ciclos
+                           
+                            for (int i = 0;i< (4*b+4*m);i++){
+                                avanzarReloj();
+                            }
+                            HiloMaestro.liberarCacheVecina(id);
+                            
                         } else { // esta en C o I, se trae de memoria, no ocupamos cache vecina, la liberamos.
                             traerBloqueMemDatos(numBloqueDatoM);
+                            HiloMaestro.liberarCacheVecina(id);
+                            for (int i = 0;i< (4*b+4*m);i++){
+                                avanzarReloj();
+                            }
                         }
-                        // poner invalido cache 
-                        HiloMaestro.liberarCacheVecina(id);
-                        return false;
-                    } else {
-                        HiloMaestro.soltarBusDatos();
-                        liberarCache();
-                        avanzarReloj();
-                        return false;
                     } 
-                } else {
-                    liberarCache();
-                    return false;
-                }
+                   // sino pude acceder o si si pude,en ambas debo liberarmi cache,soltar el bus y avanzat reloj
+                    HiloMaestro.soltarBusDatos();
+                } 
+                liberarCache();
+                avanzarReloj();
+                return false;
+                
             }            
         } else {  // No se pudo pedir la cache
             avanzarReloj();
