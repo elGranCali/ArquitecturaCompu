@@ -58,21 +58,24 @@ public class Nucleo extends Thread {
             }
         }  
         // PRUEBA PARA VER EL WRITE BACK DE UN BLOQUE DE CACHE
-        /*cacheDatos[24%8][0] = 999;
+        /* cacheDatos[24%8][0] = 999;
         cacheDatos[24%8][1] = 999;
         cacheDatos[24%8][2] = 999;
         cacheDatos[24%8][3] = 999;
         cacheDatos[24%8][4] = 24;
-        cacheDatos[24%8][5] = 1;    // Se settea como modificado */
-        // Prueba de si el bloque esta en la otra y esta modificado snooping=
+        cacheDatos[24%8][5] = 1;    // Se settea como modificado 
+        */
+        /*
+        Prueba de si el bloque esta en la otra y esta modificado snooping=
         if (id.equals("dos")){
-            cacheDatos[0][0] = 999;
-            cacheDatos[0][1] = 999;
-            cacheDatos[0][2] = 999;
-            cacheDatos[0][3] = 999;
-            cacheDatos[0][4] = 24;
-            cacheDatos[0][5] = 1;    // Se settea como modificado */
-        }
+            cacheDatos[7][0] = 999;
+            cacheDatos[7][1] = 999;
+            cacheDatos[7][2] = 999;
+            cacheDatos[7][3] = 999;
+            cacheDatos[7][4] = 23;
+            cacheDatos[7][5] = 1;    // Se settea como modificado
+        } */
+        
     }
     
         // Este método puede ser llamado en cualquier momento que se termine un ciclo
@@ -187,7 +190,8 @@ public class Nucleo extends Thread {
     
 	
     public void procesarQuantum () throws InterruptedException {
-        int tiempoTrayendoBloque = 4*(b+m+b);     
+        int tiempoTrayendoBloque = 4*(b+m+b);
+        int direccionDato;
         boolean agregarATerminados = false;
         int q = QUAMTUM;
         
@@ -208,7 +212,7 @@ public class Nucleo extends Thread {
                 
                 int tipo = Decodificador.instruccionMemoria(hilillo);
                 if (tipo > 0) {   // 2da Entrega
-                    int direccionDato = Decodificador.getDireccion(hilillo, contexto);
+                    direccionDato = Decodificador.getDireccion(hilillo, contexto);
                     int numBloqueDatoM = (direccionDato-640)/16; // Bloque en memoria de datos numerados de 0 a 87                  
                     if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
                         while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
@@ -322,14 +326,14 @@ public class Nucleo extends Thread {
 
     // Recibe la direccion virtual (Por ejemplo 640), el numero de bloque de memoria iniciando en 0 hasta 87, y el string del hilillo
     private boolean ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
-        boolean respuesta;
+        boolean lecturaCompleta;
         if(pedirCache()){ // Si pudo tomar la cache, la toma
             System.out.println("Dentro del ciclo ejecutarLW");
             if (cacheHit(numBloqueDatoM) != -1){  // Es un
                 Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo); //Leer la palabra
                 avanzarReloj();
                 liberarCache();
-                respuesta = true;
+                lecturaCompleta = true;
             }else {
                 if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
                     //PARTE DEL WRITE BACK
@@ -349,10 +353,11 @@ public class Nucleo extends Thread {
                             for (int i = 0;i< (4*b+4*b+4*m);i++){
                                 avanzarReloj();
                             }
+                            Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo);
                             liberarCache();
                             HiloMaestro.liberarCacheVecina(id);
                             HiloMaestro.soltarBusDatos();
-                            respuesta = true;
+                            lecturaCompleta = true;
                         } else {
                             //HAY QUE IR A MEMORIA
                             int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
@@ -363,6 +368,7 @@ public class Nucleo extends Thread {
                             for (int i = 0;i< (4*b+4*m);i++){
                                 avanzarReloj();
                             }
+                            Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo);
                             liberarCache();
                             HiloMaestro.liberarCacheVecina(id);
                             HiloMaestro.soltarBusDatos();
@@ -371,24 +377,27 @@ public class Nucleo extends Thread {
                             cacheDatos[numBloqueDatoM%8][2] = cacheDatos[numBloqueDatoM%8][2]*10;
                             cacheDatos[numBloqueDatoM%8][3] = cacheDatos[numBloqueDatoM%8][3]*10;
                             HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM); */
-                            respuesta = true;
+                            lecturaCompleta = true;
                         }
-                    } else {
+                    } else { // No se obtuvo la Cache Vecina
                         HiloMaestro.soltarBusDatos();
                         liberarCache();
                         avanzarReloj();
-                        respuesta = false;
+                        lecturaCompleta = false;
                     } 
-                } else {
+                } else {  // No se obtuvo el BUS
                     liberarCache();
-                    respuesta = false;
+                    lecturaCompleta = false;
                 }
             }            
-        } else {  // No se pudo pedir la cache
+        } else {  // No se obtuvo la Cache
             avanzarReloj();
-            respuesta = false;
+            lecturaCompleta = false;
         }
-        return respuesta;
+        if (lecturaCompleta && esLL){
+            contexto.RL = direccion;
+        }
+        return lecturaCompleta;
     }
 
     public void traerBloqueMemDatos(int numBloqueDatoM) {

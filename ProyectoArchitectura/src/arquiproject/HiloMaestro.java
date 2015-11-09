@@ -301,9 +301,9 @@ public class HiloMaestro {
     
      public static int [] leerDesdeLaOtraCache(String nucleoFuente, int numBloqueDatoM) {
         if( nucleoFuente.equalsIgnoreCase("uno")){
-            return n2.getBloque(numBloqueDatoM%4);
+            return n2.getBloque(numBloqueDatoM%8);
         }else{
-            return n1.getBloque(numBloqueDatoM%4);
+            return n1.getBloque(numBloqueDatoM%8);
         }
     }
     

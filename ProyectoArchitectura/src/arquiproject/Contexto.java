@@ -14,6 +14,7 @@ public class Contexto {
     public int PC;
     public int[] registros = new int[33];
     public String id;
+    public int RL;
     
     public Contexto(int pc, int name){
         this.PC = pc;
@@ -33,6 +34,7 @@ public class Contexto {
                 respuesta += "\n";
             }
         }
+        respuesta += "RL: " + RL;
         respuesta += "\n****************************************************";
         return respuesta;
     }

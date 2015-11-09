@@ -86,8 +86,6 @@ public class Decodificador {
                 //System.out.print("PC="+contexto.PC);
                 break;
             /*case "50":
-                registros[r2] = M*(r3+registros[r1]);
-                registros[32] = r3+registros[r1];
                 break;
             case "51": //verificar este codOp porque está repetido, era originalmente 12
                 if(registros[32] == r3+registros[r1]){
@@ -167,7 +165,7 @@ public class Decodificador {
         String registro2 = sepHilo[2];
         int r2 = Integer.parseInt(registro2);
         int numBloque = (direccion-640)/16;
-        int numPalabra = (direccion-640)%16;
+        int numPalabra = (direccion-640)/4%4;
         cacheDatos[numBloque][numPalabra] = contexto.registros[r2];     
     }
     
