@@ -198,19 +198,11 @@ public class Nucleo extends Thread {
                    
                     if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
                         while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
-                            try {
-                                avanzarReloj();
-                            } catch (InterruptedException ex) {
-                                System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
-                            }
+                            avanzarReloj();
                         }                       
                     } else {
                          while ( !ejecutarSW_SC(tipo==51, direccionDato, numBloqueDatoM, hilillo)){
-                            try {
-                                avanzarReloj();
-                            } catch (InterruptedException ex) {
-                                System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
-                            }
+                            avanzarReloj();
                          }
                     }
                     // reducir quantum, pues termina de ejecutarse la instruccion lw/sw/ll/sc 
@@ -224,21 +216,13 @@ public class Nucleo extends Thread {
                             HiloMaestro.terminarHilo(); 
                             System.out.println("El nucleo "+ id + " agrega el contexto del hilillo " + contexto.id +" a la cola de terminados");
                             coladeTerminados.add(contexto);
-                            try {
-                                avanzarReloj();
-                            } catch (InterruptedException ex) {
-                                System.out.println("Falla al avanzar el reloj cuando se ejecuta el fin");
-                            }
+                            avanzarReloj();
                             break;
                         }
                     } finally {
                        // lockOcupado.unlock();
                     }
-                    try {
-                        avanzarReloj();
-                    } catch (InterruptedException ex) {
-                        System.out.println("Falla al avanzar el reloj despues de ejecutar una instruccion");
-                    }
+                    avanzarReloj();
                 }
             } else {    // Instruccion no esta en cache 
                
@@ -249,11 +233,7 @@ public class Nucleo extends Thread {
                 if (!HiloMaestro.attemptAccess()) {
                     System.out.println("Nucleo: "+ id + ", Bus esta ocupado.");
                     // Avanzar reloj hasta que bus esté desocupado
-                    try {
-                        avanzarReloj();
-                    } catch (InterruptedException ex) {
-                        System.out.println("AVANCE EN NUCLEO" + id);
-                    }
+                    avanzarReloj();
                 } else {
                     // traer de memoria las 4 palabras del bloque 
                    for (int j=0; j<4; j++) {  // 4 palabras
@@ -268,11 +248,7 @@ public class Nucleo extends Thread {
                     // mientras que la cantidad de ciclos nueva no termine 
                     while (c != 0){
                         c--;    // Solo avance reloj 
-                        try {
-                            avanzarReloj();
-                        } catch (InterruptedException ex) {
-                            System.out.println("Error en el trayendo datos de memoria");
-                        }
+                        avanzarReloj();
                     } 
                     // Al salir de aquí ya cargó el bloque a cache
                 }
@@ -305,15 +281,12 @@ public class Nucleo extends Thread {
     
     @Override
     public void run(){
-        while (HiloMaestro.hayTrabajo()) {                try {    // Seria hasta que ya no exista trabajo
+        while (HiloMaestro.hayTrabajo()) {                
+            try {    // Seria hasta que ya no exista trabajo
             // Caso de que no tenga un contexto asignado el debe seguir corriendo  
             if (contexto == null) {
                 System.out.println("Nucleo " + id + " esta ocioso");
-                try {
-                    avanzarReloj();
-                } catch (InterruptedException ex) {
-                    System.out.println("Falla al avanzar el reloj cuando no hay contexto");
-                }              
+                avanzarReloj();              
                 continue;  // Salga de esta iteración hasta que exista un contexto
             }  
             System.out.println("Núcleo " + id + " iniciando el quantum");
@@ -423,7 +396,7 @@ public class Nucleo extends Thread {
     }
     
     
-    private boolean ejecutarSW_SC(boolean esSC, int direccion, int numBloqueDatoM, String hilillo) {
+    private boolean ejecutarSW_SC(boolean esSC, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
 
         int estado = cacheHit(numBloqueDatoM); 
         if(pedirCache()){ // Si pudo tomar la cache, la toma
@@ -461,11 +434,7 @@ public class Nucleo extends Thread {
                     } else {
                         HiloMaestro.soltarBusDatos();
                         liberarCache();
-                        try {
-                            avanzarReloj();
-                        } catch (InterruptedException ex) {
-                            System.out.println("Error al liberar la cache y el bus del nucleo: " + id);
-                        }
+                        avanzarReloj();
                         return false;
                     } 
                 } else {
@@ -474,11 +443,7 @@ public class Nucleo extends Thread {
                 }
             }            
         } else {  // No se pudo pedir la cache
-            try {
-                avanzarReloj();
-            } catch (InterruptedException ex) {
-                System.out.println("Error al adquirir la cache propia del nucleo: " + id);
-            }
+            avanzarReloj();
             return false;
         }
     }
