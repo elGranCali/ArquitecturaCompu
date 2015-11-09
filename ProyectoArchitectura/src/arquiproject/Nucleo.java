@@ -57,12 +57,13 @@ public class Nucleo extends Thread {
                 cacheDatos[i][j] = -1;
             }
         }  
-        cacheDatos[24][0] = 999;
-        cacheDatos[24][1] = 999;
-        cacheDatos[24][2] = 999;
-        cacheDatos[24][3] = 999;
-        cacheDatos[24][4] = 24;
-        cacheDatos[24][5] = 1;    
+        // PRUEBA PARA VER EL WRITE BACK DE UN BLOQUE DE CACHE
+        cacheDatos[24%8][0] = 999;
+        cacheDatos[24%8][1] = 999;
+        cacheDatos[24%8][2] = 999;
+        cacheDatos[24%8][3] = 999;
+        cacheDatos[24%8][4] = 24;
+        cacheDatos[24%8][5] = 1;    // Se settea como modificado
     }
     
         // Este método puede ser llamado en cualquier momento que se termine un ciclo
@@ -323,8 +324,8 @@ public class Nucleo extends Thread {
             }else {
                 if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
                     //PARTE DEL WRITE BACK
-                    if(bloqueDatosModificado(numBloqueDatoM%8)){  // Revisar el valor de numBloquememoria
-                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], cacheDatos[numBloqueDatoM%8][5]);  //Esto es el write-back
+                    if(bloqueDatosModificado(numBloqueDatoM%8)){  // Se revisa el bloque que esta en la cache antes de ser reemplazado, si esta modificado se va a memoria a escribirlo
+                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], cacheDatos[numBloqueDatoM%8][4]);  //Esto es el write-back
                     }                     
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
                         int snooping = HiloMaestro.snooping(id, numBloqueDatoM);
