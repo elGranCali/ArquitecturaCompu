@@ -56,7 +56,13 @@ public class Nucleo extends Thread {
             for (int j=0; j < 6; j++) {
                 cacheDatos[i][j] = -1;
             }
-        }       
+        }  
+        cacheDatos[24][0] = 999;
+        cacheDatos[24][1] = 999;
+        cacheDatos[24][2] = 999;
+        cacheDatos[24][3] = 999;
+        cacheDatos[24][4] = 24;
+        cacheDatos[24][5] = 1;    
     }
     
         // Este método puede ser llamado en cualquier momento que se termine un ciclo
@@ -318,7 +324,7 @@ public class Nucleo extends Thread {
                 if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
                     //PARTE DEL WRITE BACK
                     if(bloqueDatosModificado(numBloqueDatoM%8)){  // Revisar el valor de numBloquememoria
-                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM);  //Esto es el write-back
+                        HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], cacheDatos[numBloqueDatoM%8][5]);  //Esto es el write-back
                     }                     
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
                         int snooping = HiloMaestro.snooping(id, numBloqueDatoM);
@@ -327,7 +333,7 @@ public class Nucleo extends Thread {
                             int [] bloqueMemoria = HiloMaestro.leerDesdeLaOtraCache(id, numBloqueDatoM);
                             System.arraycopy(bloqueMemoria, 0, cacheDatos[numBloqueDatoM%8], 0, PALABRASPORBLOQUE);
                             HiloMaestro.escribirEnMemoria(bloqueMemoria, numBloqueDatoM); // NO LO HE PROBADO
-                            cacheDatos[numBloqueDatoM%8][4] =numBloqueDatoM; // Estado compartido
+                            cacheDatos[numBloqueDatoM%8][4] =numBloqueDatoM; // Se settea el numero de bloque
                             cacheDatos[numBloqueDatoM%8][5] =0; // Estado compartido
                             HiloMaestro.setEstadoEnOtraCache(id ,numBloqueDatoM%8, 0);  //Cambiar el estado de la otra cache de M a C
                             for (int i = 0;i< (4*b+4*b+4*m);i++){
@@ -350,11 +356,11 @@ public class Nucleo extends Thread {
                             liberarCache();
                             HiloMaestro.liberarCacheVecina(id);
                             HiloMaestro.soltarBusDatos();
-                            cacheDatos[numBloqueDatoM%8][0] = cacheDatos[numBloqueDatoM%8][0]*10;
+                            /*cacheDatos[numBloqueDatoM%8][0] = cacheDatos[numBloqueDatoM%8][0]*10;
                             cacheDatos[numBloqueDatoM%8][1] = cacheDatos[numBloqueDatoM%8][1]*10;
                             cacheDatos[numBloqueDatoM%8][2] = cacheDatos[numBloqueDatoM%8][2]*10;
                             cacheDatos[numBloqueDatoM%8][3] = cacheDatos[numBloqueDatoM%8][3]*10;
-                            HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM);
+                            HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM); */
                             respuesta = true;
                         }
                     } else {
