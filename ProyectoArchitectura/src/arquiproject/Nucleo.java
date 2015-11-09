@@ -52,12 +52,11 @@ public class Nucleo extends Thread {
                 cacheInstrucciones[i][j] = -1;
             }
         }
-		for (int i=0; i < 8; i++){
+	for (int i=0; i < 8; i++){
             for (int j=0; j < 6; j++) {
                 cacheDatos[i][j] = -1;
             }
-        }
-        
+        }       
     }
     
         // Este método puede ser llamado en cualquier momento que se termine un ciclo
@@ -99,6 +98,7 @@ public class Nucleo extends Thread {
             for (int j=0; j < 6; j++) {
                  cajita += "["+cacheDatos[i][j]+"] , ";
             }
+            cajita += "\n";
         }
         System.out.println(cajita);
     }
@@ -173,7 +173,6 @@ public class Nucleo extends Thread {
     public void procesarQuantum () throws InterruptedException {
         int tiempoTrayendoBloque = 4*(b+m+b);     
         boolean agregarATerminados = false;
-        boolean completadoEnEsteCiclo = true;   // Para la primera entrega siempre es true
         int q = QUAMTUM;
         
         while (q != 0)  {       // Ejecución de todas las instrucciones que comprenden un quantum
@@ -194,8 +193,7 @@ public class Nucleo extends Thread {
                 int tipo = Decodificador.instruccionMemoria(hilillo);
                 if (tipo > 0) {   // 2da Entrega
                     int direccionDato = Decodificador.getDireccion(hilillo, contexto);
-                    int numBloqueDatoM = (direccionDato-640)/16; // Bloque en memoria de datos creo q aqui se le deben sumar 640
-                   
+                    int numBloqueDatoM = (direccionDato-640)/16; // Bloque en memoria de datos numerados de 0 a 87                  
                     if (tipo == 43 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
                         while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
                             avanzarReloj();
@@ -302,22 +300,26 @@ public class Nucleo extends Thread {
                 Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        imprimirCacheDatos();
         System.out.println("TERMINO EL NUCLEO " +id);
     }        
 
+    // Recibe la direccion virtual (Por ejemplo 640), el numero de bloque de memoria iniciando en 0 hasta 87, y el string del hilillo
     private boolean ejecutarLW_LL(boolean esLL, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
+        boolean respuesta;
         if(pedirCache()){ // Si pudo tomar la cache, la toma
+            System.out.println("Dentro del ciclo ejecutarLW");
             if (cacheHit(numBloqueDatoM) != -1){  // Es un
                 Decodificador.ejecutarLectura(cacheDatos, direccion, contexto, hilillo); //Leer la palabra
                 avanzarReloj();
-                return true;
+                liberarCache();
+                respuesta = true;
             }else {
                 if (HiloMaestro.pedirBusDatos()){  // Cambio con respecto al diagrama (di se pide el bus antes de que se pruebe que el tag del bloque es modificado)
                     //PARTE DEL WRITE BACK
                     if(bloqueDatosModificado(numBloqueDatoM%8)){  // Revisar el valor de numBloquememoria
                         HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM);  //Esto es el write-back
-                    } 
-                    
+                    }                     
                     if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
                         int snooping = HiloMaestro.snooping(id, numBloqueDatoM);
                         if ( snooping == 1) { //ESTA EN LA OTRA CACHE Y ESTA MODIFICADO
@@ -331,7 +333,10 @@ public class Nucleo extends Thread {
                             for (int i = 0;i< (4*b+4*b+4*m);i++){
                                 avanzarReloj();
                             }
-                            return true;
+                            liberarCache();
+                            HiloMaestro.liberarCacheVecina(id);
+                            HiloMaestro.soltarBusDatos();
+                            respuesta = true;
                         } else {
                             //HAY QUE IR A MEMORIA
                             int [] bloqueMemoria = HiloMaestro.leerDesdeMemoria(direccion); 
@@ -342,23 +347,27 @@ public class Nucleo extends Thread {
                             for (int i = 0;i< (4*b+4*m);i++){
                                 avanzarReloj();
                             }
-                            return true;
+                            liberarCache();
+                            HiloMaestro.liberarCacheVecina(id);
+                            HiloMaestro.soltarBusDatos();
+                            respuesta = true;
                         }
                     } else {
                         HiloMaestro.soltarBusDatos();
                         liberarCache();
                         avanzarReloj();
-                        return false;
+                        respuesta = false;
                     } 
                 } else {
                     liberarCache();
-                    return false;
+                    respuesta = false;
                 }
             }            
         } else {  // No se pudo pedir la cache
             avanzarReloj();
-            return false;
+            respuesta = false;
         }
+        return respuesta;
     }
 
     public void traerBloqueMemDatos(int numBloqueDatoM) {

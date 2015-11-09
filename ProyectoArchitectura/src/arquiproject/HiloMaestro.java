@@ -162,6 +162,7 @@ public class HiloMaestro {
         while (colaDeTerminados.peek() != null) {
             ans += colaDeTerminados.poll().toString();
         }
+        imprimirMemDatos();
         return ans;
     }
         
@@ -206,9 +207,6 @@ public class HiloMaestro {
         for (int i=0; i < cantidadMemDatos; i++) {
             memoriaDatos[i] = i;
         }
-        memoriaDatos[0] = 888;
-        memoriaDatos[1] = 777;
-        memoriaDatos[2] = 666;
     }
 	
     public static void imprimirMemoria() {

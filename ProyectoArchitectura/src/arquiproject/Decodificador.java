@@ -151,14 +151,15 @@ public class Decodificador {
             return direccionDato;
     }
 
+    // Recibe la cache de datos, la direccion virtual, el contexto del hilillo y el string del hilillo
     static void ejecutarLectura(int[][] cacheDatos, int direccion, Contexto contexto, String hilillo) {
         // Settea en el registro del contexto el valor leido desde la cache 
         String [] sepHilo = hilillo.split(" ");
-        String registro2 = sepHilo[2];
+        String registro2 = sepHilo[2]; // String que representa el registro destino
         int r2 = Integer.parseInt(registro2);
-        int numBloque = (direccion-640)/16;
-        int numPalabra = (direccion-640)/4%4;
-        contexto.registros[r2] = cacheDatos[numBloque][numPalabra];
+        int numBloque = (direccion-640)/16;     // Este es el numero de bloque de memoria (De 0 a 87)
+        int numPalabra = (direccion-640)/4%4;   // Primero se saca la direccion fisica ((direccion-640)/4)  ----  
+        contexto.registros[r2] = cacheDatos[numBloque%8][numPalabra]; // Notar el %8 que permite hacer el mapeo directo
     }
     
     static void ejecutarEscritura(int[][] cacheDatos, int direccion, Contexto contexto, String hilillo){
