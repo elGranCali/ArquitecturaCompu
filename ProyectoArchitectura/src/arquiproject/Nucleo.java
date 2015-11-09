@@ -58,12 +58,21 @@ public class Nucleo extends Thread {
             }
         }  
         // PRUEBA PARA VER EL WRITE BACK DE UN BLOQUE DE CACHE
-        cacheDatos[24%8][0] = 999;
+        /*cacheDatos[24%8][0] = 999;
         cacheDatos[24%8][1] = 999;
         cacheDatos[24%8][2] = 999;
         cacheDatos[24%8][3] = 999;
         cacheDatos[24%8][4] = 24;
-        cacheDatos[24%8][5] = 1;    // Se settea como modificado
+        cacheDatos[24%8][5] = 1;    // Se settea como modificado */
+        // Prueba de si el bloque esta en la otra y esta modificado snooping=
+        if (id.equals("dos")){
+            cacheDatos[0][0] = 999;
+            cacheDatos[0][1] = 999;
+            cacheDatos[0][2] = 999;
+            cacheDatos[0][3] = 999;
+            cacheDatos[0][4] = 24;
+            cacheDatos[0][5] = 1;    // Se settea como modificado */
+        }
     }
     
         // Este método puede ser llamado en cualquier momento que se termine un ciclo
