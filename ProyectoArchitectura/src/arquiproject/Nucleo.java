@@ -350,6 +350,11 @@ public class Nucleo extends Thread {
                             liberarCache();
                             HiloMaestro.liberarCacheVecina(id);
                             HiloMaestro.soltarBusDatos();
+                            cacheDatos[numBloqueDatoM%8][0] = cacheDatos[numBloqueDatoM%8][0]*10;
+                            cacheDatos[numBloqueDatoM%8][1] = cacheDatos[numBloqueDatoM%8][1]*10;
+                            cacheDatos[numBloqueDatoM%8][2] = cacheDatos[numBloqueDatoM%8][2]*10;
+                            cacheDatos[numBloqueDatoM%8][3] = cacheDatos[numBloqueDatoM%8][3]*10;
+                            HiloMaestro.escribirEnMemoria(cacheDatos[numBloqueDatoM%8], numBloqueDatoM);
                             respuesta = true;
                         }
                     } else {

@@ -282,8 +282,10 @@ public class HiloMaestro {
         System.out.println("Se crean los 2 nucleos");      
     }
      
+    // OK Recibe el bloque de cache y el bloque de memoria que quiere ser escrito (0 a 87)
     public static void escribirEnMemoria(int [] bloque, int numBloqueMemoria) {
-        //Escriba en memoria el bloque corr
+        int direccionFisicaBloque = numBloqueMemoria*4;
+        System.arraycopy(bloque, 0, memoriaDatos, direccionFisicaBloque, Nucleo.PALABRASPORBLOQUE);
     }
     
     public static int [] leerDesdeMemoria(int direccion) {
