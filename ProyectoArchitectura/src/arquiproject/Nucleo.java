@@ -321,7 +321,7 @@ public class Nucleo extends Thread {
                 Logger.getLogger(Nucleo.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        imprimirCacheDatos();
+       
         System.out.println("TERMINO EL NUCLEO " +id);
     }        
 
@@ -452,93 +452,106 @@ public class Nucleo extends Thread {
     }
     
     private boolean ejecutarSW_SC(boolean esSC, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
+        boolean escrituraCompleta=false; 
         imprimirCacheDatos(); 
-        
-        int estado = cacheHit(numBloqueDatoM); 
-        if(pedirCache()){ // Si pudo tomar la cache, la toma
-             System.out.println("Dentro del ciclo ejecutarSW");
-            System.out.println("Nucleo "+id+" toma su cache");
-            if (estado != -1){  // Es un C o un M osea un hit 
-                System.out.println("Nucleo "+id+" tiene un hit");
-                if (estado == 1)  { // modificado 
-                    //no pide bus, solo escribe
-                    System.out.println("Nucleo "+id+" ejecuta escritura pues bloque estaba modificado");
-                    Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
-                } else { // compartido 
-                    System.out.println("Nucleo "+id+" pide bus pues bloque estaba compartido");
-                    // si es C, pide bus para avisar a las demas caches q modificara un bloque
-                    // luego de avisar, escribe 
-                    if (HiloMaestro.pedirBusDatos()){ // si es c pide bus 
-                        //avisar a las demas caches 
-                        System.out.println("Nucleo "+id+" avisa invalidacion");
-                        HiloMaestro.avisarInvalidacion(numBloqueDatoM,id);
-                        System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
+        if (contexto.RL == -1 && esSC){
+            // el sc falla en su ejecucion y no ejecuta un sw 
+            contexto.registros[1] = 0;
+            escrituraCompleta=false;
+        } else {
+            if (esSC) {
+                contexto.registros[1] = 1;
+            }
+            
+            // el sw normal 
+            int estado = cacheHit(numBloqueDatoM); 
+            if(pedirCache()){ // Si pudo tomar la cache, la toma
+                 System.out.println("Dentro del ciclo ejecutarSW");
+                System.out.println("Nucleo "+id+" toma su cache");
+                if (estado != -1){  // Es un C o un M osea un hit 
+                    System.out.println("Nucleo "+id+" tiene un hit");
+                    if (estado == 1)  { // modificado 
+                        //no pide bus, solo escribe
+                        System.out.println("Nucleo "+id+" ejecuta escritura pues bloque estaba modificado");
                         Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
-                    }
-                    System.out.println("Nucleo "+id+" suelta bus y libera cache");
-                    HiloMaestro.soltarBusDatos();
-                    liberarCache();
-                }
-                imprimirCacheDatos(); 
-                return true;
-            }else { // hay que traerlo de memoria o de la otra cache 
-                System.out.println("Nucleo "+id+" tiene un miss!! ");
-                if (HiloMaestro.pedirBusDatos()){  
-                    System.out.println("Nucleo "+id+" logra tomar bus");
-                    if(cacheState(numBloqueDatoM) == 1){  // si el bloque actual de mi cache esta Modificado, lo escribo en memoria 
-                        subirBloqueMemDatos(numBloqueDatoM);
-                    } 
-                    // ya ahora si puedo caerle encima con cosas al bloque
-                    // primero me fijo si puedo pedir la cache vecina y preguntar si el bloque esta ahi
-                    if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
-                        System.out.println("Nucleo "+id+" pidio cache vecina y la tomo");
-                        int snooping = HiloMaestro.snooping(id, numBloqueDatoM); // me dice el estado en que esté el bloque en la otra cache
-                        System.out.println("Nucleo "+id+" pregunta por estado de bloque: "+numBloqueDatoM+ "y el estado es: "+snooping);
-                        if ( snooping == 1) { // esta en M en la otra cache
-                            System.out.println("Nucleo "+id+" pide subir bloque de cache vecina a mem ");
-                            HiloMaestro.subirBloqueCacheVecinaAMemDatos(id, numBloqueDatoM);
-                            System.out.println("Nucleo "+id+" pide a hilo principal q le pase el bloque de cache vecina");
-                            HiloMaestro.subirBloqueCacheVecinaACacheNeedly(id, numBloqueDatoM);
-                            
-                            // ponerme como modificado
-                            ponermeModifBloque(numBloqueDatoM);
-                            // poner a la otra cache como invalido
-                            HiloMaestro.avisarInvalidacion(numBloqueDatoM, id);
-                            //como fui a memoria y todo simulo los ciclos
-                           System.out.println("escritura");
-                           System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
+                    } else { // compartido 
+                        System.out.println("Nucleo "+id+" pide bus pues bloque estaba compartido");
+                        // si es C, pide bus para avisar a las demas caches q modificara un bloque
+                        // luego de avisar, escribe 
+                        if (HiloMaestro.pedirBusDatos()){ // si es c pide bus 
+                            //avisar a las demas caches 
+                            System.out.println("Nucleo "+id+" avisa invalidacion");
+                            HiloMaestro.avisarInvalidacion(numBloqueDatoM,id);
+                            System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
                             Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
-                            for (int i = 0;i< (4*b+4*m);i++){
-                                avanzarReloj();
-                            }
-                            System.out.println("Nucleo "+id+" libera cache vecina");
-                            HiloMaestro.liberarCacheVecina(id);
-                            return true; 
-                        } else { // esta en C o I, se trae de memoria, no ocupamos cache vecina, la liberamos.
-                            System.out.println("Nucleo "+id+" trae bloque de memoria pues no esta en cache vecina");
-                            traerBloqueMemDatos(numBloqueDatoM);
-                            System.out.println("Nucleo "+id+" libera cache vecina");
-                            HiloMaestro.liberarCacheVecina(id);
-                            for (int i = 0;i< (4*b+4*m);i++){
-                                avanzarReloj();
-                            }
                         }
+                        System.out.println("Nucleo "+id+" suelta bus y libera cache");
+                        HiloMaestro.soltarBusDatos();
+                        liberarCache();
+                    }
+                    imprimirCacheDatos(); 
+                    escrituraCompleta = true;
+                }else { // hay que traerlo de memoria o de la otra cache 
+                    System.out.println("Nucleo "+id+" tiene un miss!! ");
+                    if (HiloMaestro.pedirBusDatos()){  
+                        System.out.println("Nucleo "+id+" logra tomar bus");
+                        if(cacheState(numBloqueDatoM) == 1){  // si el bloque actual de mi cache esta Modificado, lo escribo en memoria 
+                            subirBloqueMemDatos(numBloqueDatoM);
+                        } 
+                        // ya ahora si puedo caerle encima con cosas al bloque
+                        // primero me fijo si puedo pedir la cache vecina y preguntar si el bloque esta ahi
+                        if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
+                            System.out.println("Nucleo "+id+" pidio cache vecina y la tomo");
+                            int snooping = HiloMaestro.snooping(id, numBloqueDatoM); // me dice el estado en que esté el bloque en la otra cache
+                            System.out.println("Nucleo "+id+" pregunta por estado de bloque: "+numBloqueDatoM+ "y el estado es: "+snooping);
+                            if ( snooping == 1) { // esta en M en la otra cache
+                                System.out.println("Nucleo "+id+" pide subir bloque de cache vecina a mem ");
+                                HiloMaestro.subirBloqueCacheVecinaAMemDatos(id, numBloqueDatoM);
+                                System.out.println("Nucleo "+id+" pide a hilo principal q le pase el bloque de cache vecina");
+                                HiloMaestro.subirBloqueCacheVecinaACacheNeedly(id, numBloqueDatoM);
+
+                                // ponerme como modificado
+                                ponermeModifBloque(numBloqueDatoM);
+                                // poner a la otra cache como invalido
+                                HiloMaestro.avisarInvalidacion(numBloqueDatoM, id);
+                                //como fui a memoria y todo simulo los ciclos
+                               System.out.println("escritura");
+                               System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
+                                Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
+                                for (int i = 0;i< (4*b+4*m);i++){
+                                    avanzarReloj();
+                                }
+                                System.out.println("Nucleo "+id+" libera cache vecina");
+                                HiloMaestro.liberarCacheVecina(id);
+                                escrituraCompleta = true; 
+                            } else { // esta en C o I, se trae de memoria, no ocupamos cache vecina, la liberamos.
+                                System.out.println("Nucleo "+id+" trae bloque de memoria pues no esta en cache vecina");
+                                traerBloqueMemDatos(numBloqueDatoM);
+                                System.out.println("Nucleo "+id+" libera cache vecina");
+                                HiloMaestro.liberarCacheVecina(id);
+                                for (int i = 0;i< (4*b+4*m);i++){
+                                    avanzarReloj();
+                                }
+                            }
+                        } 
+                        System.out.println("Nucleo "+id+" no logro tomar la cache vecina, entonces suelta bus");
+                       // sino pude acceder o si si pude,en ambas debo liberarmi cache,soltar el bus y avanzat reloj
+                        HiloMaestro.soltarBusDatos();
                     } 
-                    System.out.println("Nucleo "+id+" no logro tomar la cache vecina, entonces suelta bus");
-                   // sino pude acceder o si si pude,en ambas debo liberarmi cache,soltar el bus y avanzat reloj
-                    HiloMaestro.soltarBusDatos();
-                } 
-                System.out.println("Nucleo "+id+" no pudo tomar el bus o lo solto, entonces suelta su cache y avanza reloj");
-                liberarCache();
+                    System.out.println("Nucleo "+id+" no pudo tomar el bus o lo solto, entonces suelta su cache y avanza reloj");
+                    liberarCache();
+                    avanzarReloj();
+                    escrituraCompleta = false;
+
+                }            
+            } else {  // No se pudo pedir la cache
+                System.out.println("Nucleo "+id+" no pudo tomar su cache, solo avanza reloj");
                 avanzarReloj();
-                return false;
-                
-            }            
-        } else {  // No se pudo pedir la cache
-            System.out.println("Nucleo "+id+" no pudo tomar su cache, solo avanza reloj");
-            avanzarReloj();
-            return false;
+                escrituraCompleta = false;
+            }
         }
+        
+        return escrituraCompleta; 
     }
 
     public void setEstadoBloque(int bloque, int estado) {
