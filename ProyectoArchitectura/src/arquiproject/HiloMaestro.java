@@ -163,8 +163,10 @@ public class HiloMaestro {
             } catch (TimeoutException ex) {
                 System.out.println("Se acabo el tiempo");
             } 
+            
         }
         String ans = "EL CICLO ES: " + ciclo + "\n";
+        n1.imprimirCacheDatos(); 
         // Este es un delay para esperar que los hilillos se guarden en la cola de terminos y puedan ser impresos
         try {
             Thread.sleep(2000);
@@ -222,7 +224,7 @@ public class HiloMaestro {
     }
 	
     public static void imprimirMemoria() {
-        String cajita = "Memoria:\n";
+        String cajita = "Memoria Instrucciones:\n";
         for (int i=0; i < cantidadMemInstrucciones; i++){
             cajita += "["+memoriaInstrucciones[i]+"] , ";   
         }
