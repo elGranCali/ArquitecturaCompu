@@ -217,7 +217,7 @@ public class HiloMaestro {
     
     public static void initMemoriaDatos() {
         for (int i=0; i < cantidadMemDatos; i++) {
-            memoriaDatos[i] = i;
+            memoriaDatos[i] = 1;
         }
     }
 	

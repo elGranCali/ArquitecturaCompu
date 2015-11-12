@@ -166,7 +166,7 @@ public class Decodificador {
         int r2 = Integer.parseInt(registro2);
         int numBloque = (direccion-640)/16;
         int numPalabra = (direccion-640)/4%4;
-        cacheDatos[numBloque][numPalabra] = contexto.registros[r2];     
+        cacheDatos[numBloque%8][numPalabra] = contexto.registros[r2];     
     }
     
 }
