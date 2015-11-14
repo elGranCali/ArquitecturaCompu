@@ -192,7 +192,7 @@ public class Nucleo extends Thread {
     public void procesarQuantum () throws InterruptedException {
         imprimirCacheDatos(); 
         int tiempoTrayendoBloque = 4*(b+m+b);
-        int direccionDato;
+        int direccionDato = 0;
         boolean agregarATerminados = false;
         int q = QUAMTUM;
         
@@ -202,7 +202,6 @@ public class Nucleo extends Thread {
             int numBloque = contexto.PC/16; // Bloque en memoria
             int numPalabra = contexto.PC%16; // busca palabra
             int nuevoNumBloque = numBloque%bloquesEnCacheI;  // averiguar donde colocar bloque
-
             if (estaEnCache(numBloque)) {       // la instrucción está en cache?
                 System.out.println("Nucleo: " + id + " Bloque "+ numBloque + " esta en cache"); 
                 System.out.println("Buscando en cache el nuevo bloque: " + nuevoNumBloque + " Palabra "+ numPalabra); 
@@ -216,6 +215,12 @@ public class Nucleo extends Thread {
                     direccionDato = Decodificador.getDireccion(hilillo, contexto);
                     int numBloqueDatoM = (direccionDato-640)/16; // Bloque en memoria de datos numerados de 0 a 87                  
                     if (tipo == 35 || tipo == 50) {  // Se ejecuta el LW o LL si el parametro enviado es true
+                        if (tipo == 50) {
+                            // avise al hilo maestro q tiene un LL corriendo
+                            // guardamos numBloqueDatoM y que mandamos nuestro id para avisar q nosotros tenemos el LL activo 
+                            HiloMaestro.avisarLL(numBloqueDatoM, id); 
+                            // al final del while coloque lo de q si se le acaba el quantum entonces igual ponga en -1 el RL 
+                        }
                         while ( !ejecutarLW_LL(tipo==50, direccionDato, numBloqueDatoM, hilillo)){
                             avanzarReloj();
                         }                       
@@ -273,7 +278,17 @@ public class Nucleo extends Thread {
                     // Al salir de aquí ya cargó el bloque a cache
                 }
             }
-        }//final de whileç
+            
+            // poner rl en -1 por si se le acabo el quantum a una instruccion LL-SC
+            //contexto.RL= -1;
+            if (q == 0 && contexto.RL == direccionDato) { 
+                contexto.RL = -1; 
+                HiloMaestro.avisarLLFallido(id); 
+            }
+            
+        }//final de while
+        
+        
         
         System.out.println("El nucleo "+ id+ " termina de procesar quantum. El contexto guardado es: PC = "+contexto.PC);  
         // Como aun no termina, se mete el contexto a la cola para luego volver a procesarlo  
@@ -438,11 +453,6 @@ public class Nucleo extends Thread {
     }
     
      public void invalidarBloque(int numBloque){
-        /*for (int i = 0; i < 8; i++){
-            if (cacheDatos[i][4] == numBloque) {
-                cacheDatos[i][5] = -1; 
-            }
-        }*/
         cacheDatos[numBloque%8][5] = -1;
     }
     
@@ -466,27 +476,27 @@ public class Nucleo extends Thread {
             int estado = cacheHit(numBloqueDatoM); 
             if(pedirCache()){ // Si pudo tomar la cache, la toma
                  System.out.println("Dentro del ciclo ejecutarSW");
-                System.out.println("Nucleo "+id+" toma su cache");
+                //System.out.println("Nucleo "+id+" toma su cache");
                 if (estado != -1){  // Es un C o un M osea un hit 
-                    System.out.println("Nucleo "+id+" tiene un hit");
+                    //System.out.println("Nucleo "+id+" tiene un hit");
                     if (estado == 1)  { // modificado 
                         //no pide bus, solo escribe
-                        System.out.println("Nucleo "+id+" ejecuta escritura pues bloque estaba modificado");
+                        //System.out.println("Nucleo "+id+" ejecuta escritura pues bloque estaba modificado");
                         Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
                         cacheDatos[numBloqueDatoM%8][4] = numBloqueDatoM;
                     } else { // compartido 
-                        System.out.println("Nucleo "+id+" pide bus pues bloque estaba compartido");
+                        //System.out.println("Nucleo "+id+" pide bus pues bloque estaba compartido");
                         // si es C, pide bus para avisar a las demas caches q modificara un bloque
                         // luego de avisar, escribe 
                         if (HiloMaestro.pedirBusDatos()){ // si es c pide bus 
                             //avisar a las demas caches 
-                            System.out.println("Nucleo "+id+" avisa invalidacion");
+                            //System.out.println("Nucleo "+id+" avisa invalidacion");
                             HiloMaestro.avisarInvalidacion(numBloqueDatoM,id);
                             System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
                             Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
                             cacheDatos[numBloqueDatoM%8][4] = numBloqueDatoM;
                         }
-                        System.out.println("Nucleo "+id+" suelta bus y libera cache");
+                        //System.out.println("Nucleo "+id+" suelta bus y libera cache");
                         HiloMaestro.soltarBusDatos();
                         
                     }
@@ -495,22 +505,22 @@ public class Nucleo extends Thread {
                     HiloMaestro.imprimirMemDatos();
                     escrituraCompleta = true;
                 }else { // hay que traerlo de memoria o de la otra cache 
-                    System.out.println("Nucleo "+id+" tiene un miss!! ");
+                    //System.out.println("Nucleo "+id+" tiene un miss!! ");
                     if (HiloMaestro.pedirBusDatos()){  
-                        System.out.println("Nucleo "+id+" logra tomar bus");
+                        //System.out.println("Nucleo "+id+" logra tomar bus");
                         if(cacheState(numBloqueDatoM) == 1){  // si el bloque actual de mi cache esta Modificado, lo escribo en memoria 
                             subirBloqueMemDatos(numBloqueDatoM);
                         } 
                         // ya ahora si puedo caerle encima con cosas al bloque
                         // primero me fijo si puedo pedir la cache vecina y preguntar si el bloque esta ahi
                         if (HiloMaestro.pedirCacheDelOtroNucleo(id)) {
-                            System.out.println("Nucleo "+id+" pidio cache vecina y la tomo");
+                            //System.out.println("Nucleo "+id+" pidio cache vecina y la tomo");
                             int snooping = HiloMaestro.snooping(id, numBloqueDatoM); // me dice el estado en que esté el bloque en la otra cache
-                            System.out.println("Nucleo "+id+" pregunta por estado de bloque: "+numBloqueDatoM+ "y el estado es: "+snooping);
+                            //System.out.println("Nucleo "+id+" pregunta por estado de bloque: "+numBloqueDatoM+ "y el estado es: "+snooping);
                             if ( snooping == 1) { // esta en M en la otra cache
-                                System.out.println("Nucleo "+id+" pide subir bloque de cache vecina a mem ");
+                                //System.out.println("Nucleo "+id+" pide subir bloque de cache vecina a mem ");
                                 HiloMaestro.subirBloqueCacheVecinaAMemDatos(id, numBloqueDatoM);
-                                System.out.println("Nucleo "+id+" pide a hilo principal q le pase el bloque de cache vecina");
+                                //System.out.println("Nucleo "+id+" pide a hilo principal q le pase el bloque de cache vecina");
                                 HiloMaestro.subirBloqueCacheVecinaACacheNeedly(id, numBloqueDatoM);
 
                                 // ponerme como modificado
@@ -519,23 +529,23 @@ public class Nucleo extends Thread {
                                 // poner a la otra cache como invalido
                                 HiloMaestro.avisarInvalidacion(numBloqueDatoM, id);
                                 //como fui a memoria y todo simulo los ciclos
-                               System.out.println("escritura");
-                               System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
+                               
+                               //System.out.println("Nucleo "+id+" ejecuta escritura luego de avisar");
                                 Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
                                 
                                 for (int i = 0;i< (4*b+4*m);i++){
                                     avanzarReloj();
                                 }
-                                System.out.println("Nucleo "+id+" libera cache vecina");
+                                //System.out.println("Nucleo "+id+" libera cache vecina");
                                 HiloMaestro.liberarCacheVecina(id);
                                 escrituraCompleta = true; 
                             } else { // esta en C o I, se trae de memoria, no ocupamos cache vecina, la liberamos.
-                                System.out.println("Nucleo "+id+" trae bloque de memoria pues no esta en cache vecina");
+                                //System.out.println("Nucleo "+id+" trae bloque de memoria pues no esta en cache vecina");
                                 traerBloqueMemDatos(numBloqueDatoM);
                                     // NEW LINE
                                 cacheDatos[numBloqueDatoM%8][4] = numBloqueDatoM;
                                     ponermeModifBloque(numBloqueDatoM);
-                                System.out.println("Nucleo "+id+" libera cache vecina");
+                                //System.out.println("Nucleo "+id+" libera cache vecina");
                                 HiloMaestro.liberarCacheVecina(id);
                                 for (int i = 0;i< (4*b+4*m);i++){
                                     avanzarReloj();
@@ -543,18 +553,17 @@ public class Nucleo extends Thread {
                                  escrituraCompleta = false;
                             }
                         } 
-                        System.out.println("Nucleo "+id+" no logro tomar la cache vecina, entonces suelta bus");
+                        //System.out.println("Nucleo "+id+" no logro tomar la cache vecina, entonces suelta bus");
                        // sino pude acceder o si si pude,en ambas debo liberarmi cache,soltar el bus y avanzat reloj
                         HiloMaestro.soltarBusDatos();
                     } 
-                    System.out.println("Nucleo "+id+" no pudo tomar el bus o lo solto, entonces suelta su cache y avanza reloj");
+                    //System.out.println("Nucleo "+id+" no pudo tomar el bus o lo solto, entonces suelta su cache y avanza reloj");
                     liberarCache();
                     avanzarReloj();
                    
-
                 }            
             } else {  // No se pudo pedir la cache
-                System.out.println("Nucleo "+id+" no pudo tomar su cache, solo avanza reloj");
+                //System.out.println("Nucleo "+id+" no pudo tomar su cache, solo avanza reloj");
                 avanzarReloj();
                 escrituraCompleta = false;
             }

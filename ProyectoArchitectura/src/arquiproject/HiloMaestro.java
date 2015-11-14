@@ -30,6 +30,8 @@ public class HiloMaestro {
     static int [] memoriaDatos = new int [352];
     static int n1Invalidor = -1;
     static int n2Invalidor = -1; 
+    static int [] n1LLactivo = new int [2];
+    static int [] n2LLactivo = new int [2];
     private int ciclo;
     private static final CyclicBarrier lock = new CyclicBarrier(3);
     int quantumCiclos;
@@ -126,9 +128,14 @@ public class HiloMaestro {
         asignarContexto(n1);
         asignarContexto(n2);
         initMemoriaDatos();
+        // simplemenete inicializando en ceros el vectorsito de LL de cada nucleo
+        n2LLactivo[0] = 0;  // 0 no hay LL .... 1 si hay un LL activo
+        n2LLactivo[1] = 0;  // 1 numBloque extraido de la direccion del LL 
+        n1LLactivo[0] = 0;
+        n1LLactivo[1] = 0;
         iniciarHilos(); 
         while(true) {
-            System.out.println("Avance hilo maestro"); 
+            //System.out.println("Avance hilo maestro"); 
             try {
                 if (nucleoVacio(n1)) {
                     asignarContexto(n1);      
@@ -154,6 +161,34 @@ public class HiloMaestro {
                     n2.invalidarBloque(n1Invalidor);
                     n1Invalidor = -1;
                 }
+                
+                /*
+                    para lo de avisar la activacion del LL por cada nucleo, al igual que colocar nuevamente en ceros 
+                    el vector de cada nucleo, se realiza en los 2 ultimos metodos de esta clase. 
+                
+                */
+                
+                if (n1LLactivo[0] == 1) { // si en el n1 hay un LL activo 
+                    
+                    if (n1LLactivo[1] == n2Invalidor){  // si el objetivo de invalidacion del n2 es igual al objetivo del LL activo 
+                        n1.contexto.RL = -1; 
+                        n1.contexto.registros[1] = 0;   // segun doc tambn debe ponerse en el reg destino un 0
+                        // volver a dejar en 0's el vectorsito
+                        n1LLactivo[0] = 0;
+                        n1LLactivo[1] = 0; 
+                    }
+                }
+                // mismo caso pero con n2
+                if (n2LLactivo[0] == 1) { // si en el n2 hay un LL activo 
+                    if (n2LLactivo[1] == n1Invalidor){
+                        n2.contexto.RL = -1; 
+                        n2.contexto.registros[1] = 0; // segun doc tambn debe ponerse en el reg destino un 0
+                        // volver a dejar en 0's el vectorsito
+                        n2LLactivo[0] = 0;
+                        n2LLactivo[1] = 0; 
+                    }
+                }
+                
                 ciclo++;
                 
             } catch (InterruptedException ex) {
@@ -225,6 +260,24 @@ public class HiloMaestro {
             
         }
        
+        
+        // parte caches
+        
+        
+        ans += "\n\n Cache Datos de Nucleo 1 \n";
+        for (int i=0; i < 8; i++){
+            for (int j=0; j < 6; j++) {
+                 ans += "["+n1.cacheDatos[i][j]+"] , ";
+            }
+            ans += "\n";
+        }
+        ans += "\n Cache Datos de Nucleo 2 \n";
+        for (int i=0; i < 8; i++){
+            for (int j=0; j < 6; j++) {
+                 ans += "["+n2.cacheDatos[i][j]+"] , ";
+            }
+            ans += "\n";
+        }
         
         return ans; 
     }
@@ -417,5 +470,26 @@ public class HiloMaestro {
         }
     }
     
+     public static void avisarLL(int numBloque, String nucleoFuente) {
+        
+         if( nucleoFuente.equalsIgnoreCase("uno")){
+            n1LLactivo[0] = 1; // cuando es un 1 es q hay un LL activo en el n1
+            n1LLactivo[1] = numBloque;
+        }else{
+            n2LLactivo[0] = 1;  // sino es en el nucleo 2
+            n2LLactivo[1] = numBloque;  
+        }
+    }
+
+     public static void avisarLLFallido(String nucleoFuente) {
+        
+         if( nucleoFuente.equalsIgnoreCase("uno")){
+            n1LLactivo[0] = 0;
+            n1LLactivo[1] = 0;
+        }else{
+            n2LLactivo[0] = 0;  
+            n2LLactivo[1] = 0;  
+        }
+    }
      
 } // Final de clase
