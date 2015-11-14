@@ -179,6 +179,55 @@ public class HiloMaestro {
         imprimirMemDatos();
         return ans;
     }
+    
+    
+    public String MemToString() {
+        String ans = "";
+        
+        // parte oara memoria de instrucciones
+        /*int bloques = 0; // llegar a 127
+        int auxBloques = 0; // llegar a 16
+        ans = "Memoria Instrucciones:\n";
+        ans += "\nB"+Integer.toString(bloques)+":";
+        bloques++; 
+        for (int i=0; i < cantidadMemInstrucciones; i++){
+            if (auxBloques  == 16) {
+                ans += "\nB"+Integer.toString(bloques)+":";
+                bloques++; 
+                auxBloques = 0; 
+            }
+            auxBloques++;
+            ans += "["+memoriaInstrucciones[i]+"] , ";   
+        }*/
+        
+        // parte para memoria de datos 
+        
+        int bloquesD = 0; 
+        int bloquePorReglon = 1; // llegar a 3 por reglon
+        ans = "\nMemoria Datos:\n";
+        ans += "\n B"+Integer.toString(bloquesD+40)+":";
+        bloquesD++; 
+        int auxBloquesD = 0; // llegar a 4
+        
+        for (int i=0; i < cantidadMemDatos; i++){
+           if (bloquePorReglon == 2 && auxBloquesD == 4) {
+                ans += "\n";
+                bloquePorReglon=0;
+            } 
+            if (auxBloquesD == 4) {
+                ans += "  B"+Integer.toString(bloquesD+40)+":";
+                bloquesD++; 
+                bloquePorReglon++;
+                auxBloquesD = 0; 
+            }
+            auxBloquesD++; 
+            ans += "["+memoriaDatos[i]+"] , ";   
+            
+        }
+       
+        
+        return ans; 
+    }
         
     /* Evento que se dispara cuando se seleccionan los hilos 
     * a correr (Carga de archivos)
