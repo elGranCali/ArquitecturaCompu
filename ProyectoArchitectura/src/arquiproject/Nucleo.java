@@ -464,13 +464,13 @@ public class Nucleo extends Thread {
     }
     
     private boolean ejecutarSW_SC(boolean esSC, int direccion, int numBloqueDatoM, String hilillo) throws InterruptedException {
-        boolean escrituraCompleta=false; 
+        
         imprimirCacheDatos(); 
         HiloMaestro.imprimirMemDatos();
         if (contexto.RL == -1 && esSC){
             // el sc falla en su ejecucion y no ejecuta un sw 
             contexto.registros[1] = 0;
-            escrituraCompleta=true;
+            return true;
         } else {
             if (esSC) {
                 contexto.registros[1] = 1;
@@ -486,22 +486,20 @@ public class Nucleo extends Thread {
                         //no pide bus, solo escribe
                         Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
                         liberarCache();
-                        escrituraCompleta=true;
+                        return true;
                         
                     } else { // compartido 
                         // si es C, pide bus para avisar a las demas caches q modificara un bloque
-                        // luego de avisar, escribe 
-                        if (HiloMaestro.pedirBusDatos()){ // si es c pide bus 
-                            //avisar a las demas caches 
+                        if (HiloMaestro.pedirBusDatos()){ // si es c pide bus avisar a las demas caches 
                             HiloMaestro.avisarInvalidacion(numBloqueDatoM,id);
                             Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
                             ponermeModifBloque(numBloqueDatoM);
                             HiloMaestro.soltarBusDatos();
                             liberarCache();
-                            escrituraCompleta=true; 
+                            return true; 
                         } else { 
                             liberarCache();
-                            escrituraCompleta=false;                            
+                            return false;                            
                         }
                     } 
                     
@@ -522,11 +520,8 @@ public class Nucleo extends Thread {
                                 HiloMaestro.subirBloqueCacheVecinaAMemDatos(id, numBloqueDatoM);
                                 //System.out.println("Nucleo "+id+" pide a hilo principal q le pase el bloque de cache vecina");
                                 HiloMaestro.subirBloqueCacheVecinaACacheNeedly(id, numBloqueDatoM);
-
-                                // ponerme como modificado
                                 cacheDatos[numBloqueDatoM%8][4] = numBloqueDatoM;
-                                ponermeModifBloque(numBloqueDatoM);
-                                // poner a la otra cache como invalido
+                                ponermeModifBloque(numBloqueDatoM);// ponerme como modificado
                                 HiloMaestro.avisarInvalidacion(numBloqueDatoM, id);
                                 //como fui a memoria y todo simulo los ciclos
                                 Decodificador.ejecutarEscritura(cacheDatos, direccion, contexto, hilillo);
@@ -538,7 +533,7 @@ public class Nucleo extends Thread {
                                 HiloMaestro.liberarCacheVecina(id);
                                 HiloMaestro.soltarBusDatos();
                                 liberarCache();
-                                escrituraCompleta = true; 
+                                return true; 
                             } else { // esta en C o I, se trae de memoria, no ocupamos cache vecina, la liberamos.
                                 //System.out.println("Nucleo "+id+" trae bloque de memoria pues no esta en cache vecina");
                                 traerBloqueMemDatos(numBloqueDatoM);
@@ -550,31 +545,28 @@ public class Nucleo extends Thread {
                                 HiloMaestro.liberarCacheVecina(id);
                                 HiloMaestro.soltarBusDatos();
                                 liberarCache();
-                                escrituraCompleta = false;
+                                return false;
                             }
                             
                         } else {
                             HiloMaestro.soltarBusDatos();
                             liberarCache();
-                            escrituraCompleta = false;
+                            return false;
                         }
 
                     } else {
                         liberarCache();
-                        escrituraCompleta = false;
+                        return false;
                     }
                        
                 }
-
-                imprimirCacheDatos(); 
-                HiloMaestro.imprimirMemDatos();    
+   
             } else {  // No se pudo pedir la cache
                 //System.out.println("Nucleo "+id+" no pudo tomar su cache, solo avanza reloj");
-                escrituraCompleta = false;
+                return false;
             }
         }
         
-        return escrituraCompleta; 
     }
 
     public void setEstadoBloque(int bloque, int estado) {
