@@ -154,12 +154,12 @@ public class HiloMaestro {
                 if (n2Invalidor != -1){
                     //mandarainvalidar el numero de bloque q tenga eln2Invalidor en cache 2
                     n2.invalidarBloque(n2Invalidor);
-                    n2Invalidor =-1;
+                    
                 } 
                 if (n1Invalidor != -1) {
                     //mandarainvalidar el numero de bloque q tenga eln1Invalidor en cache 1
-                    n2.invalidarBloque(n1Invalidor);
-                    n1Invalidor = -1;
+                    n1.invalidarBloque(n1Invalidor);
+                    
                 }
                 
                 /*
@@ -188,7 +188,12 @@ public class HiloMaestro {
                         n2LLactivo[1] = 0; 
                     }
                 }
-                
+                n1Invalidor =-1;
+                n2Invalidor =-1;
+                n2LLactivo[0] = 0;
+                n2LLactivo[1] = 0; 
+                n1LLactivo[0] = 0;
+                n1LLactivo[1] = 0; 
                 ciclo++;
                 
             } catch (InterruptedException ex) {
@@ -201,7 +206,7 @@ public class HiloMaestro {
             
         }
         String ans = "EL CICLO ES: " + ciclo + "\n";
-        n1.imprimirCacheDatos(); 
+        //n1.imprimirCacheDatos(); 
         // Este es un delay para esperar que los hilillos se guarden en la cola de terminos y puedan ser impresos
         try {
             Thread.sleep(2000);
@@ -211,7 +216,7 @@ public class HiloMaestro {
         while (colaDeTerminados.peek() != null) {
             ans += colaDeTerminados.poll().toString();
         }
-        imprimirMemDatos();
+        //imprimirMemDatos();
         return ans;
     }
     
@@ -471,7 +476,7 @@ public class HiloMaestro {
     }
     
      public static void avisarLL(int numBloque, String nucleoFuente) {
-        
+        System.out.println("coloco en array un 1 de LL activo en "+nucleoFuente+" con numbloque"+numBloque);
          if( nucleoFuente.equalsIgnoreCase("uno")){
             n1LLactivo[0] = 1; // cuando es un 1 es q hay un LL activo en el n1
             n1LLactivo[1] = numBloque;
@@ -482,7 +487,7 @@ public class HiloMaestro {
     }
 
      public static void avisarLLFallido(String nucleoFuente) {
-        
+        System.out.println("limpio array de nucleo "+nucleoFuente);
          if( nucleoFuente.equalsIgnoreCase("uno")){
             n1LLactivo[0] = 0;
             n1LLactivo[1] = 0;
